@@ -6,6 +6,7 @@ import { Menu, X } from "lucide-react"
 import { useState } from "react"
 
 import { Button } from "@/components/ui/button"
+import { LogoutButton } from "@/components/auth/logout-button"
 import { cn } from "@/lib/utils"
 
 interface HeaderProps {
@@ -70,6 +71,7 @@ export function Header({ user }: HeaderProps) {
                 </Link>
               )}
               <span className="text-sm text-gray-600">{user.name || "User"}</span>
+              <LogoutButton />
             </>
           ) : (
             <>
@@ -135,6 +137,7 @@ export function Header({ user }: HeaderProps) {
                   </Link>
                 )}
                 <span className="text-sm text-gray-500">{user.name || "User"}</span>
+                <LogoutButton variant="outline" size="sm" className="w-full mt-2" />
               </>
             ) : (
               <div className="flex flex-col space-y-2">
