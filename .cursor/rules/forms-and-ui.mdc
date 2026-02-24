@@ -1,0 +1,44 @@
+---
+description: Forms, UI component, and Tailwind conventions — react-hook-form, Zod, Shadcn, cn(), cva.
+globs: **/*.tsx
+alwaysApply: false
+---
+
+# Forms & UI
+
+## Forms
+- Client form components use `"use client"` + `useForm` + `zodResolver`
+- Define Zod schema in same file (or `types/`); export inferred type
+- Use shadcn `Form`, `FormField`, `FormItem`, `FormLabel`, `FormControl`, `FormMessage`
+- Show field-level errors inline via `FormMessage` — not just toasts
+- Map server `fieldErrors` back to RHF on failure:
+
+```ts
+if (!result.success) {
+  if (result.fieldErrors) {
+    Object.entries(result.fieldErrors).forEach(([field, message]) => {
+      form.setError(field as keyof FormInput, { message })
+    })
+  } else {
+    form.setError("root", { message: result.error })
+  }
+  return
+}
+```
+
+- Disable submit while `form.formState.isSubmitting` is `true`
+- Submit via Server Action — no `fetch`/`axios` unless truly client-only
+
+## Components
+- Server Component by default — `"use client"` only when needed
+- `export function ComponentName(...)` — named export, no default (except `page.tsx`)
+- `type` for props — `interface` only if extending
+- `cn()` for all conditional/dynamic class names
+- `cva` for components with multiple visual variants
+- Reuse `components/ui/` primitives before building new ones
+- No business logic in UI components — move to `lib/` or server actions
+
+## Tailwind
+- Mobile-first: base → `sm:` → `md:` → `lg:`
+- No arbitrary values like `w-[347px]` unless truly unavoidable
+- No custom CSS — Tailwind utilities only

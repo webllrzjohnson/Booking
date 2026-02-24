@@ -1,0 +1,82 @@
+---
+description: Core project conventions — naming, folder structure, imports, preferred libraries, and don'ts. Always active.
+alwaysApply: true
+---
+
+# Project Conventions
+
+## Stack
+Next.js 14 App Router · TypeScript strict · Tailwind + Shadcn/Radix · PostgreSQL + Prisma · NextAuth v5 · react-hook-form + Zod · PM2 + Nginx on Hostinger VPS
+
+## Naming
+- Files/folders: `kebab-case` → `user-card.tsx`, `auth-utils.ts`
+- Components: `PascalCase` → `UserCard`
+- Functions/variables: `camelCase` → `getUser`, `isLoading`
+- Booleans: auxiliary verb prefix → `isLoading`, `hasError`, `shouldRedirect`
+- Constants: `UPPER_SNAKE_CASE`
+- Hooks: `use` prefix → `useProjects`
+- Prisma models: `PascalCase` singular → `User`, `BookingSlot`
+- DB tables: `snake_case` plural → `booking_slots`
+- Zod schemas: `PascalCase` + `Schema` suffix → `CreateBookingSchema`
+- File extensions: `.hook.ts`, `.type.ts`, `.config.ts`, `.context.tsx`
+- Event handlers: `handle` prefix → `handleClick`, `handleSubmit`
+
+## Folder structure
+- `app/(auth)/` — public auth routes
+- `app/(dashboard)/` — protected routes; auth guard in layout
+- `components/ui/` — Shadcn primitives only
+- `components/<feature>/` — feature-scoped components
+- `lib/db.ts` — Prisma singleton (never instantiate elsewhere)
+- `lib/auth.ts` — NextAuth config and exports
+- `lib/utils.ts` — `cn()` and shared helpers
+- `lib/queries/` — read-only DB functions, one file per Prisma model
+- `lib/actions/` — shared server actions (mutations)
+- `lib/hooks/` — custom React hooks
+- `types/index.ts` — shared TypeScript types (including `ActionResult<T>`)
+- `middleware.ts` — route protection at the edge
+
+## Imports
+- Always use `@/` alias — never `../../`
+- Order: third-party → internal → types (blank line between groups)
+
+## Preferred libraries
+Reach for these before installing anything new:
+
+| Need | Library |
+|---|---|
+| Forms | `react-hook-form` + `zod` |
+| Component variants | `class-variance-authority` (cva) |
+| Class merging | `clsx` + `tailwind-merge` via `cn()` |
+| UI primitives | `shadcn/ui` + `@radix-ui` |
+| Icons | `lucide-react` |
+| Dates | `date-fns` |
+| Notifications | `sonner` |
+| Tables | `@tanstack/react-table` |
+| Animations | Tailwind transitions first, then `framer-motion` if complex |
+
+Don't install a new package if the above covers it. Don't install a package if the need can be met in under 15 lines.
+
+## General
+- Files stay under ~150 lines — split if larger
+- Reuse `components/ui/` and `lib/` before building anything new
+- One responsibility per file
+
+## React
+- Never use array index as `key` prop — use a stable, unique ID
+- Use `useReducer` instead of multiple related `useState` calls for complex component state
+- Use `useCallback` when passing callbacks as props to memoized children
+- Use `useMemo` only for genuinely expensive computations — not as a default
+
+## Don'ts
+- Don't add loading states, skeletons, or error boundaries unless explicitly asked
+- Don't create abstraction layers until there's a real, repeated need
+- Don't use relative imports (`../../`) — always `@/` aliases
+- Don't hardcode values that belong in environment variables
+- Don't create placeholder/mock data unless the feature requires it
+- Don't add TODO comments — either implement it or leave it out
+- Don't use `useEffect` for data fetching — use Server Components
+- Don't put business logic inside UI components
+- Don't fetch full rows from the DB — always `select` only needed fields
+- Don't add comments that just repeat what the code already says
+- Don't use array index as list `key` — always use a stable unique ID
+- Don't skip ARIA labels on interactive elements — buttons, inputs, and icons must be accessible

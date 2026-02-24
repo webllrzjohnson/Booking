@@ -1,0 +1,54 @@
+---
+description: Next.js 14 App Router patterns — Server Components, auth, middleware, data fetching, error handling. Always active.
+alwaysApply: true
+---
+
+# Next.js Patterns
+
+## Code style
+- Functional, declarative code only — no classes
+- Composition over inheritance
+
+## Server vs Client Components
+- Server Components by default — only add `"use client"` when you need hooks, browser APIs, or event listeners
+- Fetch data in Server Components — never in `useEffect`
+- Wrap client components in `Suspense` with a fallback when needed
+- Use dynamic imports for non-critical components
+- Server Actions for form mutations — not API routes unless triggered from client-only logic
+- Minimize `useEffect` and `useState` — push logic to the server
+
+## Pages
+- Every `page.tsx` must export `metadata` with `title` and `description`
+- Default export must be an `async` Server Component
+
+## Authentication (NextAuth v5)
+- Config in `lib/auth.ts` — export `{ auth, signIn, signOut, handlers }`
+- Use `auth()` in Server Components, Server Actions, and Route Handlers
+- Use `useSession()` only in Client Components for reactive session state
+- Never trust client-side session for authorization — always verify server-side
+- Protect routes at the edge via `middleware.ts` — redirect unauthenticated users to `/login`
+- Store only `id`, `role`, `email` in JWT/session — never passwords or tokens
+
+```ts
+// middleware.ts
+export const config = {
+  matcher: ["/dashboard/:path*", "/api/:path*"],
+}
+```
+
+## Data fetching
+- Call `lib/queries/<model>.ts` helpers — no raw Prisma in components
+- Always `select` only needed fields — never fetch entire rows
+- Use `next/image`, `next/link`, `next/font` — never CDN equivalents
+
+## API Routes
+- Flow: auth check → Zod validate → call service → return response
+- Success: `{ data }` · Error: `{ error: string, code?: string }`
+- Status codes: 200 GET/update · 201 created · 400 bad input · 401 unauth · 403 forbidden · 404 not found · 409 conflict · 500 unexpected
+
+## Error handling
+- Early returns for errors — happy path last
+- `console.error("[fnName]", error)` server-side — sanitized message to client
+- Never leak Prisma errors, stack traces, or internal IDs to the client
+- Use `error.tsx` and `global-error.tsx` for unexpected runtime errors
+- Model expected errors as return values in Server Actions — avoid `try/catch` for predictable failures

@@ -1,0 +1,47 @@
+---
+description: Prisma, query helpers, and server action conventions for the data layer.
+globs: lib/**/*.ts,prisma/**
+alwaysApply: false
+---
+
+# Data Layer
+
+## Prisma
+- Singleton in `lib/db.ts` — never instantiate `PrismaClient` elsewhere
+- Never put raw Prisma queries in components or route handlers — wrap in `lib/queries/` or `lib/actions/`
+- Always `select` only needed fields — never fetch entire rows
+- Always include `userId` in `where` clauses for user-owned data — never trust client-provided user IDs
+- Use `db.$transaction()` for any multi-step write
+- Run `npx prisma generate` after every schema change
+
+## Query helpers (`lib/queries/<model>.ts`)
+- Named exports only — no default export
+- Read-only: no mutations in query files
+- Use `Prisma.<Model>Select` with `satisfies` for type-safe selects
+- Explicit return types on all exported functions
+- Filter by `userId` for user-owned models
+
+```ts
+// ✅
+const bookingSelect = {
+  id: true,
+  date: true,
+  status: true,
+} satisfies Prisma.BookingSelect
+
+export async function getBookingById(input: {
+  id: string
+  userId: string
+}): Promise<BookingItem | null> {
+  return db.booking.findFirst({
+    where: { id: input.id, userId: input.userId },
+    select: bookingSelect,
+  })
+}
+```
+
+## Server actions (`lib/actions/<feature>.ts`)
+- `"use server"` at top of file
+- Validate with Zod `safeParse` first, then `auth()`, then DB
+- Return `ActionResult<T>` from `@/types` — never throw expected errors
+- Catch unexpected errors: log with context, return `{ success: false, error: "Something went wrong" }`
