@@ -17,6 +17,10 @@ export default async function MyBookingsPage() {
     redirect("/login?callbackUrl=/dashboard/bookings")
   }
 
+  if (session.user.role === "STAFF" || session.user.role === "ADMIN") {
+    redirect("/dashboard/staff")
+  }
+
   const bookings = await getUserBookings(session.user.id)
 
   const now = new Date()

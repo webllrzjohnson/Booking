@@ -58,11 +58,13 @@ export function Header({ user }: HeaderProps) {
         <div className="hidden md:flex items-center space-x-4">
           {user ? (
             <>
-              <Link href="/dashboard/bookings">
-                <Button variant="ghost" size="sm">
-                  My Bookings
-                </Button>
-              </Link>
+              {user.role === "CUSTOMER" && (
+                <Link href="/dashboard/bookings">
+                  <Button variant="ghost" size="sm">
+                    My Bookings
+                  </Button>
+                </Link>
+              )}
               {(user.role === "STAFF" || user.role === "ADMIN") && (
                 <Link href="/dashboard/staff">
                   <Button variant="ghost" size="sm">
@@ -120,13 +122,15 @@ export function Header({ user }: HeaderProps) {
             ))}
             {user ? (
               <>
-                <Link
-                  href="/dashboard/bookings"
-                  className="text-sm font-medium text-gray-600"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  My Bookings
-                </Link>
+                {user.role === "CUSTOMER" && (
+                  <Link
+                    href="/dashboard/bookings"
+                    className="text-sm font-medium text-gray-600"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    My Bookings
+                  </Link>
+                )}
                 {(user.role === "STAFF" || user.role === "ADMIN") && (
                   <Link
                     href="/dashboard/staff"

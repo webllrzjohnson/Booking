@@ -21,7 +21,7 @@ export default async function DashboardLayout({
       href: "/dashboard/bookings",
       label: "My Bookings",
       icon: "Calendar",
-      roles: ["CUSTOMER", "STAFF", "ADMIN"],
+      roles: ["CUSTOMER"],
     },
     {
       href: "/dashboard/staff",
