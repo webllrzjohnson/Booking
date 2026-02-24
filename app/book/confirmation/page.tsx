@@ -17,13 +17,13 @@ export const metadata: Metadata = {
 }
 
 interface ConfirmationPageProps {
-  searchParams: { booking?: string }
+  searchParams: Promise<{ booking?: string }>
 }
 
 export default async function ConfirmationPage({
   searchParams,
 }: ConfirmationPageProps) {
-  const bookingId = searchParams.booking
+  const { booking: bookingId } = await searchParams
 
   if (!bookingId) {
     redirect("/book")

@@ -11,11 +11,11 @@ export const metadata: Metadata = {
 }
 
 interface StaffPageProps {
-  searchParams: { service?: string }
+  searchParams: Promise<{ service?: string }>
 }
 
 export default async function BookStaffPage({ searchParams }: StaffPageProps) {
-  const serviceId = searchParams.service
+  const { service: serviceId } = await searchParams
 
   if (!serviceId) {
     redirect("/book")

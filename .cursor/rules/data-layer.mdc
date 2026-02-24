@@ -14,6 +14,28 @@ alwaysApply: false
 - Use `db.$transaction()` for any multi-step write
 - Run `npx prisma generate` after every schema change
 
+### Prisma 7 + Next.js 15 Compatibility
+- **CRITICAL**: Prisma must be externalized in `next.config.mjs` to prevent webpack errors
+- **CRITICAL**: Cannot use Prisma in Edge Runtime (middleware defaults to edge) — see Next.js Patterns rule
+- Prisma uses Node.js built-ins (`node:crypto`, `node:buffer`) — ensure proper webpack configuration
+- Required `next.config.mjs` setup:
+
+```js
+const nextConfig = {
+  webpack: (config, { isServer }) => {
+    if (isServer) {
+      config.externals.push({
+        '@prisma/client': 'commonjs @prisma/client',
+        'pg-native': 'commonjs pg-native',
+        'bcryptjs': 'commonjs bcryptjs',
+      })
+    }
+    return config
+  },
+  serverExternalPackages: ['@prisma/client', '@prisma/adapter-pg', 'pg', 'pg-pool', 'bcryptjs'],
+}
+```
+
 ## Query helpers (`lib/queries/<model>.ts`)
 - Named exports only — no default export
 - Read-only: no mutations in query files

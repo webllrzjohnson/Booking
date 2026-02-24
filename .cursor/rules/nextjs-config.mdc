@@ -1,0 +1,102 @@
+---
+description: Next.js configuration patterns for next.config.mjs — webpack, externals, runtime compatibility.
+globs: next.config.*
+alwaysApply: false
+---
+
+# Next.js Configuration
+
+## File Structure
+- Use `next.config.mjs` (ESM) — not `.js` when `package.json` has `"type": "module"`
+- Export default config object with proper JSDoc type annotation
+
+```js
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  // config here
+}
+
+export default nextConfig
+```
+
+## Webpack Configuration
+- Use `webpack` function to customize bundling behavior
+- **Always** externalize Prisma and native dependencies for server-side builds
+- Never apply Node.js polyfills to client bundles — causes crypto errors
+
+```js
+webpack: (config, { isServer }) => {
+  if (isServer) {
+    // Externalize packages that use Node.js built-ins
+    config.externals.push({
+      '@prisma/client': 'commonjs @prisma/client',
+      'pg-native': 'commonjs pg-native',
+      'pg-pool': 'commonjs pg-pool',
+      'bcryptjs': 'commonjs bcryptjs',
+    })
+  }
+  return config
+},
+```
+
+## Server External Packages (Next.js 15)
+- Use `serverExternalPackages` to prevent bundling of packages with native bindings
+- Required for Prisma 7, PostgreSQL adapters, and native crypto modules
+
+```js
+serverExternalPackages: [
+  '@prisma/client',
+  '@prisma/adapter-pg',
+  'pg',
+  'pg-pool',
+  'bcryptjs',
+],
+```
+
+## Common Errors & Fixes
+
+### Error: `Reading from "node:crypto" is not handled by plugins`
+**Cause**: Prisma uses Node.js built-ins, but webpack can't resolve `node:` protocol  
+**Fix**: Add Prisma to `serverExternalPackages` and externalize in webpack config (see above)
+
+### Error: `Module build failed` with Edge Runtime
+**Cause**: Middleware runs in Edge Runtime by default, but Prisma requires Node.js  
+**Fix**: Add `runtime: "nodejs"` to `middleware.ts` config (see Next.js Patterns rule)
+
+### Error: `Can't resolve 'pg-native'`
+**Cause**: `pg` package optionally requires `pg-native` which isn't installed  
+**Fix**: Externalize `pg-native` in webpack config — it's an optional dependency
+
+## Complete Template (Prisma + NextAuth + PostgreSQL)
+
+```js
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  webpack: (config, { isServer }) => {
+    if (isServer) {
+      config.externals.push({
+        '@prisma/client': 'commonjs @prisma/client',
+        'pg-native': 'commonjs pg-native',
+        'pg-pool': 'commonjs pg-pool',
+        'bcryptjs': 'commonjs bcryptjs',
+      })
+    }
+    return config
+  },
+  serverExternalPackages: [
+    '@prisma/client',
+    '@prisma/adapter-pg',
+    'pg',
+    'pg-pool',
+    'bcryptjs',
+  ],
+}
+
+export default nextConfig
+```
+
+## Don'ts
+- Don't add client-side crypto fallbacks (`crypto: false`) — breaks NextAuth and Prisma
+- Don't use `experimental.serverComponentsExternalPackages` (deprecated in Next.js 15)
+- Don't bundle Prisma client — always externalize it
+- Don't try to use Prisma in Edge Runtime — use Node.js runtime instead

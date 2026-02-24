@@ -20,6 +20,24 @@ alwaysApply: true
 ## Pages
 - Every `page.tsx` must export `metadata` with `title` and `description`
 - Default export must be an `async` Server Component
+- **Next.js 15**: `searchParams` is now async — type as `Promise<{ ... }>` and `await` it:
+
+```ts
+// ✅ Next.js 15
+interface PageProps {
+  searchParams: Promise<{ id?: string }>
+}
+
+export default async function Page({ searchParams }: PageProps) {
+  const { id } = await searchParams
+  // ...
+}
+
+// ❌ Old pattern (Next.js 14)
+interface PageProps {
+  searchParams: { id?: string }
+}
+```
 
 ## Authentication (NextAuth v5)
 - Config in `lib/auth.ts` — export `{ auth, signIn, signOut, handlers }`
@@ -29,10 +47,21 @@ alwaysApply: true
 - Protect routes at the edge via `middleware.ts` — redirect unauthenticated users to `/login`
 - Store only `id`, `role`, `email` in JWT/session — never passwords or tokens
 
+## Middleware
+- **CRITICAL**: If middleware uses Prisma/database (via `lib/auth.ts` → `lib/db.ts`), must run in Node.js runtime — not Edge
+- Add `runtime: "nodejs"` to config when accessing Prisma
+
 ```ts
-// middleware.ts
+// middleware.ts — accessing database/Prisma
+import { auth } from "@/lib/auth"
+
+export default auth((req) => {
+  // middleware logic
+})
+
 export const config = {
-  matcher: ["/dashboard/:path*", "/api/:path*"],
+  matcher: ["/dashboard/:path*"],
+  runtime: "nodejs", // Required when using Prisma
 }
 ```
 
