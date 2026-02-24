@@ -1,7 +1,7 @@
 import { db } from "@/lib/db"
 
 export async function getServices() {
-  return await db.service.findMany({
+  const services = await db.service.findMany({
     where: {
       isActive: true,
     },
@@ -17,10 +17,15 @@ export async function getServices() {
       price: true,
     },
   })
+
+  return services.map((service) => ({
+    ...service,
+    price: service.price.toNumber(),
+  }))
 }
 
 export async function getServiceById(id: string) {
-  return await db.service.findUnique({
+  const service = await db.service.findUnique({
     where: { id },
     select: {
       id: true,
@@ -31,10 +36,17 @@ export async function getServiceById(id: string) {
       price: true,
     },
   })
+
+  if (!service) return null
+
+  return {
+    ...service,
+    price: service.price.toNumber(),
+  }
 }
 
 export async function getServiceBySlug(slug: string) {
-  return await db.service.findUnique({
+  const service = await db.service.findUnique({
     where: { slug },
     select: {
       id: true,
@@ -45,4 +57,11 @@ export async function getServiceBySlug(slug: string) {
       price: true,
     },
   })
+
+  if (!service) return null
+
+  return {
+    ...service,
+    price: service.price.toNumber(),
+  }
 }

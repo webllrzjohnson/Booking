@@ -13,7 +13,7 @@ interface Booking {
   notes: string | null
   service: {
     name: string
-    price: any
+    price: number
   }
   staff: {
     id: string

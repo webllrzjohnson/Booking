@@ -44,7 +44,15 @@ export async function lookupGuestBookingAction(
       },
     })
 
-    const matchingBooking = bookings.find((b) =>
+    const serializedBookings = bookings.map((booking) => ({
+      ...booking,
+      service: {
+        ...booking.service,
+        price: booking.service.price.toNumber(),
+      },
+    }))
+
+    const matchingBooking = serializedBookings.find((b) =>
       b.id.toUpperCase().includes(normalizedRef) || 
       b.id.slice(-8).toUpperCase() === normalizedRef
     )

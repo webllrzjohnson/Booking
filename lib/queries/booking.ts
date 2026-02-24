@@ -1,7 +1,7 @@
 import { db } from "@/lib/db"
 
 export async function getBookingById(bookingId: string) {
-  return await db.booking.findUnique({
+  const booking = await db.booking.findUnique({
     where: { id: bookingId },
     select: {
       id: true,
@@ -33,10 +33,20 @@ export async function getBookingById(bookingId: string) {
       },
     },
   })
+
+  if (!booking) return null
+
+  return {
+    ...booking,
+    service: {
+      ...booking.service,
+      price: booking.service.price.toNumber(),
+    },
+  }
 }
 
 export async function getUserBookings(userId: string) {
-  return await db.booking.findMany({
+  const bookings = await db.booking.findMany({
     where: {
       userId,
     },
@@ -70,10 +80,18 @@ export async function getUserBookings(userId: string) {
       startTime: "desc",
     },
   })
+
+  return bookings.map((booking) => ({
+    ...booking,
+    service: {
+      ...booking.service,
+      price: booking.service.price.toNumber(),
+    },
+  }))
 }
 
 export async function getGuestBooking(email: string, bookingId: string) {
-  return await db.booking.findFirst({
+  const booking = await db.booking.findFirst({
     where: {
       id: bookingId,
       guestEmail: email,
@@ -107,6 +125,16 @@ export async function getGuestBooking(email: string, bookingId: string) {
       },
     },
   })
+
+  if (!booking) return null
+
+  return {
+    ...booking,
+    service: {
+      ...booking.service,
+      price: booking.service.price.toNumber(),
+    },
+  }
 }
 
 export async function getStaffBookings(
