@@ -1,8 +1,8 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { format } from "date-fns"
+import { format, addDays } from "date-fns"
 
 import {
   Dialog,
@@ -15,7 +15,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
 import { rescheduleBookingAction } from "@/lib/actions/update-booking"
-import { getAvailableSlotsAction } from "@/lib/actions/availability"
+import { getAvailableSlotsAction, getAvailableDatesAction } from "@/lib/actions/availability"
 
 interface Booking {
   id: string
@@ -49,6 +49,32 @@ export function RescheduleDialog({ booking }: RescheduleDialogProps) {
   const [isLoadingSlots, setIsLoadingSlots] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [availableDates, setAvailableDates] = useState<Set<string>>(new Set())
+  const [isLoadingDates, setIsLoadingDates] = useState(true)
+
+  useEffect(() => {
+    async function loadAvailableDates() {
+      if (!open) return
+
+      setIsLoadingDates(true)
+      const startDate = new Date()
+      const endDate = addDays(new Date(), 60)
+      
+      const result = await getAvailableDatesAction(
+        booking.staffId,
+        booking.serviceId,
+        startDate,
+        endDate
+      )
+      
+      if (result.success) {
+        setAvailableDates(new Set(result.data))
+      }
+      setIsLoadingDates(false)
+    }
+
+    loadAvailableDates()
+  }, [open, booking.staffId, booking.serviceId])
 
   async function handleDateSelect(date: Date | undefined) {
     setSelectedDate(date)
@@ -114,8 +140,10 @@ export function RescheduleDialog({ booking }: RescheduleDialogProps) {
               disabled={(date) => {
                 const today = new Date()
                 today.setHours(0, 0, 0, 0)
+                const dateStr = format(date, "yyyy-MM-dd")
+                const hasNoAvailability = !isLoadingDates && !availableDates.has(dateStr)
                 return (
-                  date < today || date.getDay() === 0 || date.getDay() === 6
+                  date < today || date.getDay() === 0 || date.getDay() === 6 || hasNoAvailability
                 )
               }}
               className="rounded-md border"

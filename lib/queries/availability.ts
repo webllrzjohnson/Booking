@@ -1,5 +1,5 @@
 import { db } from "@/lib/db"
-import { addMinutes, format, parse, isAfter, isBefore } from "date-fns"
+import { addMinutes, addDays, format, parse, isAfter, isBefore } from "date-fns"
 
 export async function getAvailableTimeSlots(
   staffId: string,
@@ -61,6 +61,8 @@ export async function getAvailableTimeSlots(
   const slots: Array<{ startTime: string; endTime: string }> = []
 
   let currentSlot = startTime
+  const now = new Date()
+  const isToday = format(date, "yyyy-MM-dd") === format(now, "yyyy-MM-dd")
 
   while (
     isBefore(currentSlot, endTime) &&
@@ -89,6 +91,11 @@ export async function getAvailableTimeSlots(
     })
 
     if (isSlotAvailable) {
+      if (isToday && isBefore(currentSlot, now)) {
+        currentSlot = addMinutes(currentSlot, slotDuration)
+        continue
+      }
+
       slots.push({
         startTime: currentSlot.toISOString(),
         endTime: slotEnd.toISOString(),
@@ -99,4 +106,34 @@ export async function getAvailableTimeSlots(
   }
 
   return slots
+}
+
+export async function getAvailableDatesInRange(
+  staffId: string,
+  serviceId: string,
+  startDate: Date,
+  endDate: Date
+): Promise<string[]> {
+  const availableDates: string[] = []
+  let currentDate = new Date(startDate)
+  currentDate.setHours(0, 0, 0, 0)
+
+  const finalDate = new Date(endDate)
+  finalDate.setHours(0, 0, 0, 0)
+
+  while (currentDate <= finalDate) {
+    const dayOfWeek = currentDate.getDay()
+
+    if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+      const slots = await getAvailableTimeSlots(staffId, serviceId, currentDate)
+      
+      if (slots.length > 0) {
+        availableDates.push(format(currentDate, "yyyy-MM-dd"))
+      }
+    }
+
+    currentDate = addDays(currentDate, 1)
+  }
+
+  return availableDates
 }

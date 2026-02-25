@@ -1,13 +1,13 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { format } from "date-fns"
+import { format, addDays } from "date-fns"
 
 import { Calendar } from "@/components/ui/calendar"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { getAvailableSlotsAction } from "@/lib/actions/availability"
+import { getAvailableSlotsAction, getAvailableDatesAction } from "@/lib/actions/availability"
 
 interface DateTimeSelectorProps {
   serviceId: string
@@ -31,6 +31,25 @@ export function DateTimeSelector({
   >([])
   const [isLoadingSlots, setIsLoadingSlots] = useState(false)
   const [selectedSlot, setSelectedSlot] = useState<string>()
+  const [availableDates, setAvailableDates] = useState<Set<string>>(new Set())
+  const [isLoadingDates, setIsLoadingDates] = useState(true)
+
+  useEffect(() => {
+    async function loadAvailableDates() {
+      setIsLoadingDates(true)
+      const startDate = new Date()
+      const endDate = addDays(new Date(), 60)
+      
+      const result = await getAvailableDatesAction(staffId, serviceId, startDate, endDate)
+      
+      if (result.success) {
+        setAvailableDates(new Set(result.data))
+      }
+      setIsLoadingDates(false)
+    }
+
+    loadAvailableDates()
+  }, [staffId, serviceId])
 
   async function handleDateSelect(date: Date | undefined) {
     setSelectedDate(date)
@@ -74,7 +93,9 @@ export function DateTimeSelector({
             disabled={(date) => {
               const today = new Date()
               today.setHours(0, 0, 0, 0)
-              return date < today || date.getDay() === 0 || date.getDay() === 6
+              const dateStr = format(date, "yyyy-MM-dd")
+              const hasNoAvailability = !isLoadingDates && !availableDates.has(dateStr)
+              return date < today || date.getDay() === 0 || date.getDay() === 6 || hasNoAvailability
             }}
             className="rounded-md border"
           />
