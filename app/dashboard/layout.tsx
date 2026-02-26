@@ -47,8 +47,8 @@ export default async function DashboardLayout({
         <aside className="md:col-span-1">
           <DashboardSidebar
             user={{
-              name: session.user.name,
-              email: session.user.email,
+              name: session.user.name ?? "",
+              email: session.user.email ?? "",
               role: session.user.role,
             }}
             navItems={filteredNavItems}
