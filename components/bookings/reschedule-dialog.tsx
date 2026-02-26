@@ -3,6 +3,9 @@
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { format, addDays } from "date-fns"
+import { toZonedTime } from "date-fns-tz"
+
+const BUSINESS_TIMEZONE = "America/Toronto"
 
 import {
   Dialog,
@@ -174,7 +177,7 @@ export function RescheduleDialog({ booking }: RescheduleDialogProps) {
                       size="sm"
                       onClick={() => setSelectedSlot(slot.startTime)}
                     >
-                      {format(new Date(slot.startTime), "h:mm a")}
+                      {format(toZonedTime(new Date(slot.startTime), BUSINESS_TIMEZONE), "h:mm a")}
                     </Button>
                   ))}
                 </div>

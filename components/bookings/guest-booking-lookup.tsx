@@ -5,7 +5,10 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { format } from "date-fns"
+import { toZonedTime } from "date-fns-tz"
 import { Calendar, Clock, User, DollarSign } from "lucide-react"
+
+const BUSINESS_TIMEZONE = "America/Toronto"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -137,11 +140,11 @@ export function GuestBookingLookup() {
                 <div>
                   <p className="text-sm text-gray-600">Date & Time</p>
                   <p className="font-medium">
-                    {format(new Date(booking.startTime), "EEEE, MMMM d, yyyy")}
+                    {format(toZonedTime(new Date(booking.startTime), BUSINESS_TIMEZONE), "EEEE, MMMM d, yyyy")}
                   </p>
                   <p className="text-sm text-gray-600">
-                    {format(new Date(booking.startTime), "h:mm a")} -{" "}
-                    {format(new Date(booking.endTime), "h:mm a")}
+                    {format(toZonedTime(new Date(booking.startTime), BUSINESS_TIMEZONE), "h:mm a")} -{" "}
+                    {format(toZonedTime(new Date(booking.endTime), BUSINESS_TIMEZONE), "h:mm a")}
                   </p>
                 </div>
               </div>

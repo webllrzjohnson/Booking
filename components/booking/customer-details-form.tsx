@@ -6,7 +6,10 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { format, addMinutes } from "date-fns"
+import { toZonedTime } from "date-fns-tz"
 import { Clock, DollarSign, Calendar as CalendarIcon } from "lucide-react"
+
+const BUSINESS_TIMEZONE = "America/Toronto"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -290,10 +293,10 @@ export function CustomerDetailsForm({
                   Date & Time
                 </p>
                 <p className="font-medium">
-                  {format(startTime, "EEEE, MMMM d, yyyy")}
+                  {format(toZonedTime(startTime, BUSINESS_TIMEZONE), "EEEE, MMMM d, yyyy")}
                 </p>
                 <p className="text-sm text-gray-600">
-                  {format(startTime, "h:mm a")} - {format(endTime, "h:mm a")}
+                  {format(toZonedTime(startTime, BUSINESS_TIMEZONE), "h:mm a")} - {format(toZonedTime(endTime, BUSINESS_TIMEZONE), "h:mm a")}
                 </p>
               </div>
 

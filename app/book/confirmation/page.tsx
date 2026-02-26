@@ -2,7 +2,10 @@ import type { Metadata } from "next"
 import { redirect } from "next/navigation"
 import Link from "next/link"
 import { format } from "date-fns"
+import { toZonedTime } from "date-fns-tz"
 import { CheckCircle, Calendar, Clock, User, DollarSign } from "lucide-react"
+
+const BUSINESS_TIMEZONE = "America/Toronto"
 
 import { auth } from "@/lib/auth"
 import { getBookingById } from "@/lib/queries/booking"
@@ -70,11 +73,11 @@ export default async function ConfirmationPage({
                 <div>
                   <p className="text-sm text-gray-600">Date & Time</p>
                   <p className="font-medium">
-                    {format(booking.startTime, "EEEE, MMMM d, yyyy")}
+                    {format(toZonedTime(booking.startTime, BUSINESS_TIMEZONE), "EEEE, MMMM d, yyyy")}
                   </p>
                   <p className="text-sm text-gray-600">
-                    {format(booking.startTime, "h:mm a")} -{" "}
-                    {format(booking.endTime, "h:mm a")}
+                    {format(toZonedTime(booking.startTime, BUSINESS_TIMEZONE), "h:mm a")} -{" "}
+                    {format(toZonedTime(booking.endTime, BUSINESS_TIMEZONE), "h:mm a")}
                   </p>
                 </div>
               </div>

@@ -3,6 +3,9 @@
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { format, addDays } from "date-fns"
+import { toZonedTime } from "date-fns-tz"
+
+const BUSINESS_TIMEZONE = "America/Toronto"
 
 import { Calendar } from "@/components/ui/calendar"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -131,7 +134,7 @@ export function DateTimeSelector({
                     size="sm"
                     onClick={() => handleSlotSelect(slot.startTime)}
                   >
-                    {format(new Date(slot.startTime), "h:mm a")}
+                    {format(toZonedTime(new Date(slot.startTime), BUSINESS_TIMEZONE), "h:mm a")}
                   </Button>
                 ))}
               </div>
@@ -162,7 +165,7 @@ export function DateTimeSelector({
               <div className="flex justify-between">
                 <span className="text-gray-600">Time:</span>
                 <span className="font-medium">
-                  {format(new Date(selectedSlot), "h:mm a")}
+                  {format(toZonedTime(new Date(selectedSlot), BUSINESS_TIMEZONE), "h:mm a")}
                 </span>
               </div>
               <div className="flex justify-between">

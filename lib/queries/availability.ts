@@ -1,5 +1,8 @@
 import { db } from "@/lib/db"
 import { addMinutes, addDays, format, parse, isAfter, isBefore } from "date-fns"
+import { toZonedTime, fromZonedTime } from "date-fns-tz"
+
+const BUSINESS_TIMEZONE = "America/Toronto"
 
 export async function getAvailableTimeSlots(
   staffId: string,
@@ -32,15 +35,16 @@ export async function getAvailableTimeSlots(
   }
 
   const dateStr = format(date, "yyyy-MM-dd")
-  const startOfDay = new Date(`${dateStr}T00:00:00Z`)
-  const endOfDay = new Date(`${dateStr}T23:59:59Z`)
+  
+  const zonedStartOfDay = fromZonedTime(`${dateStr}T00:00:00`, BUSINESS_TIMEZONE)
+  const zonedEndOfDay = fromZonedTime(`${dateStr}T23:59:59`, BUSINESS_TIMEZONE)
 
   const existingBookings = await db.booking.findMany({
     where: {
       staffId,
       startTime: {
-        gte: startOfDay,
-        lte: endOfDay,
+        gte: zonedStartOfDay,
+        lte: zonedEndOfDay,
       },
       status: {
         in: ["PENDING", "CONFIRMED"],
@@ -55,8 +59,8 @@ export async function getAvailableTimeSlots(
     },
   })
 
-  const startTime = new Date(`${dateStr}T${workingHours.startTime}:00Z`)
-  const endTime = new Date(`${dateStr}T${workingHours.endTime}:00Z`)
+  const startTime = fromZonedTime(`${dateStr}T${workingHours.startTime}:00`, BUSINESS_TIMEZONE)
+  const endTime = fromZonedTime(`${dateStr}T${workingHours.endTime}:00`, BUSINESS_TIMEZONE)
   const slotDuration = 15
   const slots: Array<{ startTime: string; endTime: string }> = []
 
