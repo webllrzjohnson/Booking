@@ -145,12 +145,18 @@ prisma/
 
 ## Deployment
 
-The application is designed for deployment on a Hostinger VPS with:
+The application is designed for deployment on a VPS (Ubuntu) with:
 - Nginx reverse proxy
 - PM2 process manager
 - PostgreSQL database
+- SSL certificate (Let's Encrypt)
 
-Refer to your project conventions for deployment specifics.
+### Deployment Guides
+
+- **`DEPLOYMENT-GUIDE.md`** - Complete step-by-step guide specific to this project (2000+ lines)
+- **`DEPLOYMENT-TEMPLATE.md`** - Reusable template for deploying any Next.js + Prisma + NextAuth project (~200 lines)
+
+Use the template for deploying similar projects to VPS/dedicated servers.
 
 ## Future Enhancements
 

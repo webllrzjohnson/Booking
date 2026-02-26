@@ -1,0 +1,91 @@
+---
+description: Date/time and timezone handling standards
+globs: ["**/lib/queries/**/*.ts", "**/lib/actions/**/*.ts", "**/components/**/date*.tsx", "**/components/**/time*.tsx"]
+alwaysApply: false
+---
+
+# Date/Time and Timezone Handling
+
+## Always Use UTC for Server-Side Date Operations
+
+When working with dates and times in server-side code (queries, actions, API routes), always use UTC to prevent timezone conversion bugs between development and production environments.
+
+### Rule: Explicit UTC Date Construction
+
+When creating Date objects from date strings and time strings, always append `Z` to force UTC interpretation:
+
+```typescript
+// ❌ BAD - timezone-dependent
+const dateStr = "2026-02-25"
+const startOfDay = new Date(`${dateStr}T00:00:00`)  // Local timezone
+const timeSlot = parse("08:00", "HH:mm", date)      // Local timezone
+
+// ✅ GOOD - explicit UTC
+const dateStr = "2026-02-25"
+const startOfDay = new Date(`${dateStr}T00:00:00Z`)  // UTC
+const timeSlot = new Date(`${dateStr}T08:00:00Z`)    // UTC
+```
+
+### Rule: Store and Transmit in ISO Format
+
+When returning dates from server functions, always use `.toISOString()` which returns UTC:
+
+```typescript
+// ✅ GOOD
+return {
+  startTime: slot.toISOString(),  // "2026-02-25T08:00:00.000Z"
+  endTime: slotEnd.toISOString(),
+}
+```
+
+### Rule: Display Conversion on Client Only
+
+Let the client convert UTC times to the user's local timezone for display:
+
+```typescript
+// Client component
+{format(new Date(slot.startTime), "h:mm a")}  // Automatically converts to local
+```
+
+## Why This Matters
+
+**Problem:** If server parses "08:00" in local timezone, converts to UTC, then client displays in their timezone:
+- Server in UTC+8 parses "08:00" → "00:00 UTC" → Client in UTC-4 sees "20:00 previous day"
+- This causes times to appear incorrectly (e.g., 4:00 AM instead of 8:00 AM)
+
+**Solution:** Use UTC throughout server operations, only convert to local timezone on the client for display.
+
+## Common Patterns
+
+### Database Queries with Date Ranges
+
+```typescript
+const dateStr = format(date, "yyyy-MM-dd")
+const startOfDay = new Date(`${dateStr}T00:00:00Z`)  // ✅ UTC
+const endOfDay = new Date(`${dateStr}T23:59:59Z`)    // ✅ UTC
+
+const bookings = await db.booking.findMany({
+  where: {
+    startTime: { gte: startOfDay, lte: endOfDay }
+  }
+})
+```
+
+### Working Hours and Time Slots
+
+```typescript
+// If workingHours.startTime is "08:00" from DB
+const dateStr = format(date, "yyyy-MM-dd")
+const startTime = new Date(`${dateStr}T${workingHours.startTime}:00Z`)  // ✅ UTC
+const endTime = new Date(`${dateStr}T${workingHours.endTime}:00Z`)      // ✅ UTC
+```
+
+### Comparing Times
+
+Always compare Date objects directly - they're already in UTC internally:
+
+```typescript
+if (isAfter(currentSlot, now)) {
+  // Safe - both are Date objects
+}
+```

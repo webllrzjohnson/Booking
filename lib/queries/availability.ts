@@ -32,8 +32,8 @@ export async function getAvailableTimeSlots(
   }
 
   const dateStr = format(date, "yyyy-MM-dd")
-  const startOfDay = new Date(`${dateStr}T00:00:00`)
-  const endOfDay = new Date(`${dateStr}T23:59:59`)
+  const startOfDay = new Date(`${dateStr}T00:00:00Z`)
+  const endOfDay = new Date(`${dateStr}T23:59:59Z`)
 
   const existingBookings = await db.booking.findMany({
     where: {
@@ -55,8 +55,8 @@ export async function getAvailableTimeSlots(
     },
   })
 
-  const startTime = parse(workingHours.startTime, "HH:mm", date)
-  const endTime = parse(workingHours.endTime, "HH:mm", date)
+  const startTime = new Date(`${dateStr}T${workingHours.startTime}:00Z`)
+  const endTime = new Date(`${dateStr}T${workingHours.endTime}:00Z`)
   const slotDuration = 15
   const slots: Array<{ startTime: string; endTime: string }> = []
 
