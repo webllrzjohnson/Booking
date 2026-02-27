@@ -62,7 +62,7 @@ export function SignupForm() {
       })
 
       if (result.success) {
-        router.push("/dashboard/bookings")
+        router.push("/verify-email?sent=1")
         router.refresh()
       } else {
         setError(result.error)

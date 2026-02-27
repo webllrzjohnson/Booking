@@ -57,6 +57,7 @@ async function main() {
         password: hashedPassword,
         phone: "(555) 123-4567",
         role: "STAFF",
+        emailVerifiedAt: new Date(),
       },
     }),
     prisma.user.create({
@@ -66,6 +67,7 @@ async function main() {
         password: hashedPassword,
         phone: "(555) 234-5678",
         role: "STAFF",
+        emailVerifiedAt: new Date(),
       },
     }),
     prisma.user.create({
@@ -75,6 +77,7 @@ async function main() {
         password: hashedPassword,
         phone: "(555) 345-6789",
         role: "STAFF",
+        emailVerifiedAt: new Date(),
       },
     }),
   ])
@@ -144,6 +147,7 @@ async function main() {
       password: hashedPassword,
       phone: "(555) 999-0000",
       role: "CUSTOMER",
+      emailVerifiedAt: new Date(),
     },
   })
 

@@ -2,10 +2,14 @@
 
 import bcrypt from "bcryptjs"
 import { AuthError } from "next-auth"
+import { randomBytes } from "node:crypto"
 
 import { db } from "@/lib/db"
 import { signIn, signOut } from "@/lib/auth"
+import { sendVerificationEmail } from "@/lib/email"
 import type { ActionResult } from "@/types"
+
+const VERIFICATION_TOKEN_EXPIRY_HOURS = 24
 
 export async function loginAction(
   email: string,
@@ -45,27 +49,71 @@ export async function signupAction(data: {
     }
 
     const hashedPassword = await bcrypt.hash(data.password, 10)
+    const token = randomBytes(32).toString("hex")
+    const expiresAt = new Date()
+    expiresAt.setHours(expiresAt.getHours() + VERIFICATION_TOKEN_EXPIRY_HOURS)
 
-    await db.user.create({
+    const user = await db.user.create({
       data: {
         name: data.name,
         email: data.email,
         phone: data.phone,
         password: hashedPassword,
         role: "CUSTOMER",
+        emailVerificationToken: token,
+        emailVerificationExpiresAt: expiresAt,
       },
     })
 
-    await signIn("credentials", {
+    const emailResult = await sendVerificationEmail({
       email: data.email,
-      password: data.password,
-      redirect: false,
+      name: data.name,
+      token,
     })
+
+    if (!emailResult.success) {
+      await db.user.delete({ where: { id: user.id } })
+      return {
+        success: false,
+        error: emailResult.error ?? "Failed to send verification email",
+      }
+    }
 
     return { success: true, data: undefined }
   } catch (error) {
     console.error("[signupAction]", error)
     return { success: false, error: "Failed to create account" }
+  }
+}
+
+export async function verifyEmailAction(
+  token: string
+): Promise<ActionResult<void>> {
+  try {
+    const user = await db.user.findFirst({
+      where: {
+        emailVerificationToken: token,
+        emailVerificationExpiresAt: { gt: new Date() },
+      },
+    })
+
+    if (!user) {
+      return { success: false, error: "Invalid or expired verification link" }
+    }
+
+    await db.user.update({
+      where: { id: user.id },
+      data: {
+        emailVerifiedAt: new Date(),
+        emailVerificationToken: null,
+        emailVerificationExpiresAt: null,
+      },
+    })
+
+    return { success: true, data: undefined }
+  } catch (error) {
+    console.error("[verifyEmailAction]", error)
+    return { success: false, error: "Verification failed" }
   }
 }
 

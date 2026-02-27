@@ -8,14 +8,17 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String
-  password  String
-  phone     String?
-  role      UserRole @default(CUSTOMER)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                          String    @id @default(cuid())
+  email                       String    @unique
+  name                        String
+  password                    String
+  phone                       String?
+  role                        UserRole  @default(CUSTOMER)
+  emailVerifiedAt              DateTime?
+  emailVerificationToken      String?
+  emailVerificationExpiresAt  DateTime?
+  createdAt                   DateTime  @default(now())
+  updatedAt                   DateTime  @updatedAt
 
   bookings     Booking[]
   staffProfile Staff?
