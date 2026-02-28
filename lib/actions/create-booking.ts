@@ -5,6 +5,9 @@ import { addMinutes } from "date-fns"
 
 import { db } from "@/lib/db"
 import { auth, signIn } from "@/lib/auth"
+import {
+  sendBookingConfirmationEmail,
+} from "@/lib/email"
 import type { ActionResult } from "@/types"
 
 interface CreateBookingInput {
@@ -28,10 +31,14 @@ export async function createBookingAction(
     const startDate = new Date(input.startTime)
     const endDate = new Date(input.endTime)
 
-    const [service, existingBookings] = await Promise.all([
+    const [service, staff, existingBookings] = await Promise.all([
       db.service.findUnique({
         where: { id: input.serviceId },
-        select: { durationMinutes: true },
+        select: { durationMinutes: true, name: true },
+      }),
+      db.staff.findUnique({
+        where: { id: input.staffId },
+        select: { user: { select: { name: true } } },
       }),
       db.booking.findMany({
         where: {
@@ -47,8 +54,8 @@ export async function createBookingAction(
       }),
     ])
 
-    if (!service) {
-      return { success: false, error: "Service not found" }
+    if (!service || !staff) {
+      return { success: false, error: "Service or staff not found" }
     }
 
     if (existingBookings.length > 0) {
@@ -107,6 +114,21 @@ export async function createBookingAction(
         status: "CONFIRMED",
       },
     })
+
+    const referenceCode = booking.id.slice(-8).toUpperCase()
+
+    const emailResult = await sendBookingConfirmationEmail({
+      email: input.email,
+      name: input.name,
+      serviceName: service.name,
+      staffName: staff.user.name,
+      startTime: startDate,
+      referenceCode,
+    })
+
+    if (!emailResult.success) {
+      console.error("[createBookingAction] Failed to send confirmation email:", emailResult.error)
+    }
 
     return { success: true, data: { bookingId: booking.id } }
   } catch (error) {
