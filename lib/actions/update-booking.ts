@@ -5,6 +5,7 @@ import { addMinutes } from "date-fns"
 
 import { db } from "@/lib/db"
 import { auth } from "@/lib/auth"
+import { sendBookingCancellationEmail } from "@/lib/email"
 import type { ActionResult } from "@/types"
 
 export async function rescheduleBookingAction(
@@ -92,6 +93,12 @@ export async function cancelBookingAction(
       where: { id: bookingId },
       select: {
         userId: true,
+        startTime: true,
+        user: {
+          select: { email: true, name: true },
+        },
+        service: { select: { name: true } },
+        staff: { select: { user: { select: { name: true } } } },
       },
     })
 
@@ -106,6 +113,19 @@ export async function cancelBookingAction(
         cancelledAt: new Date(),
       },
     })
+
+    if (booking.user) {
+      const emailResult = await sendBookingCancellationEmail({
+        email: booking.user.email,
+        name: booking.user.name,
+        serviceName: booking.service.name,
+        staffName: booking.staff.user.name,
+        startTime: booking.startTime,
+      })
+      if (!emailResult.success) {
+        console.error("[cancelBookingAction] Failed to send cancellation email:", emailResult.error)
+      }
+    }
 
     revalidatePath("/dashboard/bookings")
     return { success: true, data: undefined }

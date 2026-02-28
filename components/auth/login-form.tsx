@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -20,7 +21,7 @@ import { loginAction } from "@/lib/actions/auth"
 
 const loginSchema = z.object({
   email: z.string().email("Invalid email address"),
-  password: z.string().min(1, "Password is required"),
+  password: z.string().trim().min(1, "Password is required"),
 })
 
 type LoginFormData = z.infer<typeof loginSchema>
@@ -29,6 +30,7 @@ export function LoginForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const callbackUrl = searchParams.get("callbackUrl") || "/dashboard/bookings"
+  const showResetSuccess = searchParams.get("reset") === "1"
   
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
@@ -64,6 +66,11 @@ export function LoginForm() {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        {showResetSuccess && (
+          <div className="rounded-md border border-green-200 bg-green-50 p-3 text-sm text-green-700">
+            Your password has been reset. Log in with your new password.
+          </div>
+        )}
         {error && (
           <div className="rounded-md bg-red-50 border border-red-200 p-3 text-sm text-red-600">
             {error}
@@ -93,7 +100,15 @@ export function LoginForm() {
           name="password"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Password</FormLabel>
+              <div className="flex items-center justify-between">
+                <FormLabel>Password</FormLabel>
+                <Link
+                  href="/forgot-password"
+                  className="text-sm font-medium text-blue-600 hover:underline"
+                >
+                  Forgot password?
+                </Link>
+              </div>
               <FormControl>
                 <Input type="password" placeholder="••••••••" {...field} />
               </FormControl>

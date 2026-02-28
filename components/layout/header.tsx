@@ -20,11 +20,18 @@ export function Header({ user }: HeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const pathname = usePathname()
 
-  const navLinks = [
+  const guestNavLinks = [
     { href: "/", label: "Home" },
     { href: "/services", label: "Services" },
-    { href: "/book", label: "Book Now" },
+    { href: "/bookings/lookup", label: "Find My Booking" },
   ]
+
+  const loggedInNavLinks = [
+    { href: "/", label: "Home" },
+    { href: "/services", label: "Services" },
+  ]
+
+  const navLinks = user ? loggedInNavLinks : guestNavLinks
 
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-white shadow-sm">

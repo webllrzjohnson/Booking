@@ -1,9 +1,12 @@
 import type { Metadata } from "next"
+import Link from "next/link"
 import { redirect } from "next/navigation"
+import { ArrowRight } from "lucide-react"
 
 import { auth } from "@/lib/auth"
 import { getUserBookings } from "@/lib/queries/booking"
 import { BookingsList } from "@/components/bookings/bookings-list"
+import { Button } from "@/components/ui/button"
 
 export const metadata: Metadata = {
   title: "My Bookings - Fitness Health",
@@ -37,6 +40,15 @@ export default async function MyBookingsPage() {
       </div>
 
       <BookingsList upcoming={upcoming} past={past} />
+
+      <div className="mt-8 text-center">
+        <Link href="/book">
+          <Button size="lg" className="bg-teal-500 hover:bg-teal-600">
+            Book Now
+            <ArrowRight className="ml-2 h-5 w-5" />
+          </Button>
+        </Link>
+      </div>
     </div>
   )
 }

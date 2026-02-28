@@ -142,11 +142,18 @@ export default async function ConfirmationPage({
                   </Button>
                 </Link>
               ) : (
-                <Link href="/signup" className="block">
-                  <Button variant="outline" className="w-full">
-                    Create Account to Manage Bookings
-                  </Button>
-                </Link>
+                <>
+                  <Link href="/bookings/lookup" className="block">
+                    <Button variant="outline" className="w-full">
+                      Find My Booking (use email + ref above)
+                    </Button>
+                  </Link>
+                  <Link href="/signup" className="block">
+                    <Button variant="outline" className="w-full">
+                      Create Account to Manage Bookings
+                    </Button>
+                  </Link>
+                </>
               )}
 
               <Link href="/book" className="block">

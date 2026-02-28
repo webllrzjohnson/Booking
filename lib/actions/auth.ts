@@ -6,10 +6,11 @@ import { randomBytes } from "node:crypto"
 
 import { db } from "@/lib/db"
 import { signIn, signOut } from "@/lib/auth"
-import { sendVerificationEmail } from "@/lib/email"
+import { sendVerificationEmail, sendPasswordResetEmail } from "@/lib/email"
 import type { ActionResult } from "@/types"
 
 const VERIFICATION_TOKEN_EXPIRY_HOURS = 24
+const PASSWORD_RESET_TOKEN_EXPIRY_HOURS = 1
 
 export async function loginAction(
   email: string,
@@ -118,5 +119,91 @@ export async function verifyEmailAction(
 }
 
 export async function logoutAction() {
-  await signOut({ redirectTo: "/" })
+  await signOut({ redirect: false })
+}
+
+export async function forgotPasswordAction(
+  email: string
+): Promise<ActionResult<void>> {
+  try {
+    const user = await db.user.findUnique({
+      where: { email },
+      select: { id: true, name: true },
+    })
+
+    if (!user) {
+      return { success: true, data: undefined }
+    }
+
+    const token = randomBytes(32).toString("hex")
+    const expiresAt = new Date()
+    expiresAt.setHours(expiresAt.getHours() + PASSWORD_RESET_TOKEN_EXPIRY_HOURS)
+
+    await db.user.update({
+      where: { id: user.id },
+      data: {
+        passwordResetToken: token,
+        passwordResetExpiresAt: expiresAt,
+      },
+    })
+
+    const emailResult = await sendPasswordResetEmail({
+      email,
+      name: user.name,
+      token,
+    })
+
+    if (!emailResult.success) {
+      await db.user.update({
+        where: { id: user.id },
+        data: { passwordResetToken: null, passwordResetExpiresAt: null },
+      })
+      return {
+        success: false,
+        error: emailResult.error ?? "Failed to send reset email",
+      }
+    }
+
+    return { success: true, data: undefined }
+  } catch (error) {
+    console.error("[forgotPasswordAction]", error)
+    return { success: false, error: "Something went wrong" }
+  }
+}
+
+export async function resetPasswordAction(data: {
+  token: string
+  password: string
+}): Promise<ActionResult<void>> {
+  try {
+    const user = await db.user.findFirst({
+      where: {
+        passwordResetToken: data.token,
+        passwordResetExpiresAt: { gt: new Date() },
+      },
+    })
+
+    if (!user) {
+      return { success: false, error: "Invalid or expired reset link" }
+    }
+
+    const hashedPassword = await bcrypt.hash(data.password, 10)
+
+    await db.user.update({
+      where: { id: user.id },
+      data: {
+        password: hashedPassword,
+        passwordResetToken: null,
+        passwordResetExpiresAt: null,
+        emailVerifiedAt: new Date(),
+        emailVerificationToken: null,
+        emailVerificationExpiresAt: null,
+      },
+    })
+
+    return { success: true, data: undefined }
+  } catch (error) {
+    console.error("[resetPasswordAction]", error)
+    return { success: false, error: "Failed to reset password" }
+  }
 }

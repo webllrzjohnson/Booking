@@ -1,6 +1,7 @@
 "use client"
 
 import { LogOut } from "lucide-react"
+import { useRouter } from "next/navigation"
 import { useTransition } from "react"
 
 import { Button } from "@/components/ui/button"
@@ -19,11 +20,14 @@ export function LogoutButton({
   className,
   showIcon = true,
 }: LogoutButtonProps) {
+  const router = useRouter()
   const [isPending, startTransition] = useTransition()
 
   function handleLogout() {
-    startTransition(() => {
-      logoutAction()
+    startTransition(async () => {
+      await logoutAction()
+      router.push("/")
+      router.refresh()
     })
   }
 

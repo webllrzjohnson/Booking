@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { format, addDays } from "date-fns"
+import { format, addDays, parse } from "date-fns"
 import { toZonedTime } from "date-fns-tz"
 
 const BUSINESS_TIMEZONE = "America/Toronto"
@@ -36,17 +36,42 @@ export function DateTimeSelector({
   const [selectedSlot, setSelectedSlot] = useState<string>()
   const [availableDates, setAvailableDates] = useState<Set<string>>(new Set())
   const [isLoadingDates, setIsLoadingDates] = useState(true)
+  const [calendarMonth, setCalendarMonth] = useState<Date>(() => new Date())
 
   useEffect(() => {
     async function loadAvailableDates() {
       setIsLoadingDates(true)
       const startDate = new Date()
       const endDate = addDays(new Date(), 60)
-      
-      const result = await getAvailableDatesAction(staffId, serviceId, startDate, endDate)
-      
+
+      const result = await getAvailableDatesAction(
+        staffId,
+        serviceId,
+        startDate,
+        endDate
+      )
+
       if (result.success) {
-        setAvailableDates(new Set(result.data))
+        const dates = result.data
+        setAvailableDates(new Set(dates))
+
+        if (dates.length > 0) {
+          const firstDateStr = dates[0]
+          const firstDate = parse(firstDateStr, "yyyy-MM-dd", new Date())
+          setSelectedDate(firstDate)
+          setCalendarMonth(firstDate)
+
+          setIsLoadingSlots(true)
+          const slotsResult = await getAvailableSlotsAction(
+            staffId,
+            serviceId,
+            firstDate
+          )
+          setIsLoadingSlots(false)
+          if (slotsResult.success) {
+            setAvailableSlots(slotsResult.data)
+          }
+        }
       }
       setIsLoadingDates(false)
     }
@@ -91,14 +116,22 @@ export function DateTimeSelector({
         <CardContent className="flex justify-center">
           <Calendar
             mode="single"
+            month={calendarMonth}
+            onMonthChange={setCalendarMonth}
             selected={selectedDate}
             onSelect={handleDateSelect}
             disabled={(date) => {
               const today = new Date()
               today.setHours(0, 0, 0, 0)
               const dateStr = format(date, "yyyy-MM-dd")
-              const hasNoAvailability = !isLoadingDates && !availableDates.has(dateStr)
-              return date < today || date.getDay() === 0 || date.getDay() === 6 || hasNoAvailability
+              const hasNoAvailability =
+                !isLoadingDates && !availableDates.has(dateStr)
+              return (
+                date < today ||
+                date.getDay() === 0 ||
+                date.getDay() === 6 ||
+                hasNoAvailability
+              )
             }}
             className="rounded-md border"
           />
