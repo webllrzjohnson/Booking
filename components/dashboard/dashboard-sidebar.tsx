@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Calendar, User, Settings, type LucideIcon } from "lucide-react"
+import { Calendar, User, Settings, Shield, type LucideIcon } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { LogoutButton } from "@/components/auth/logout-button"
@@ -11,6 +11,7 @@ const iconMap: Record<string, LucideIcon> = {
   Calendar,
   User,
   Settings,
+  Shield,
 }
 
 interface NavItem {

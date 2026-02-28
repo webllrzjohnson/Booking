@@ -4,11 +4,6 @@ import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
-import { format } from "date-fns"
-import { toZonedTime } from "date-fns-tz"
-import { Calendar, Clock, User, DollarSign } from "lucide-react"
-
-const BUSINESS_TIMEZONE = "America/Toronto"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -21,9 +16,11 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Separator } from "@/components/ui/separator"
-import { lookupGuestBookingAction } from "@/lib/actions/guest-booking"
+import { BookingLookupResults } from "@/components/bookings/booking-lookup-results"
+import {
+  lookupGuestBookingAction,
+  type GuestBookingLookupResult,
+} from "@/lib/actions/guest-booking"
 
 const lookupSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -33,7 +30,8 @@ const lookupSchema = z.object({
 type LookupFormData = z.infer<typeof lookupSchema>
 
 export function GuestBookingLookup() {
-  const [booking, setBooking] = useState<any>(null)
+  const [result, setResult] =
+    useState<GuestBookingLookupResult | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
 
@@ -47,15 +45,15 @@ export function GuestBookingLookup() {
 
   async function onSubmit(data: LookupFormData) {
     setError(null)
-    setBooking(null)
+    setResult(null)
     setIsLoading(true)
 
-    const result = await lookupGuestBookingAction(data.email, data.bookingRef)
+    const response = await lookupGuestBookingAction(data.email, data.bookingRef)
 
-    if (result.success) {
-      setBooking(result.data)
+    if (response.success) {
+      setResult(response.data)
     } else {
-      setError(result.error)
+      setError(response.error)
     }
 
     setIsLoading(false)
@@ -119,80 +117,7 @@ export function GuestBookingLookup() {
         </CardContent>
       </Card>
 
-      {booking && (
-        <Card>
-          <CardHeader>
-            <div className="flex items-start justify-between">
-              <CardTitle>Your Appointment</CardTitle>
-              <Badge
-                variant={
-                  booking.status === "CANCELLED" ? "destructive" : "default"
-                }
-              >
-                {booking.status}
-              </Badge>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-3">
-              <div className="flex items-start gap-3">
-                <Calendar className="h-5 w-5 text-blue-600 mt-0.5" />
-                <div>
-                  <p className="text-sm text-gray-600">Date & Time</p>
-                  <p className="font-medium">
-                    {format(toZonedTime(new Date(booking.startTime), BUSINESS_TIMEZONE), "EEEE, MMMM d, yyyy")}
-                  </p>
-                  <p className="text-sm text-gray-600">
-                    {format(toZonedTime(new Date(booking.startTime), BUSINESS_TIMEZONE), "h:mm a")} -{" "}
-                    {format(toZonedTime(new Date(booking.endTime), BUSINESS_TIMEZONE), "h:mm a")}
-                  </p>
-                </div>
-              </div>
-
-              <Separator />
-
-              <div className="flex items-start gap-3">
-                <User className="h-5 w-5 text-blue-600 mt-0.5" />
-                <div>
-                  <p className="text-sm text-gray-600">Service & Practitioner</p>
-                  <p className="font-medium">{booking.service.name}</p>
-                  <p className="text-sm text-gray-600">
-                    with {booking.staff.user.name}
-                  </p>
-                </div>
-              </div>
-
-              <Separator />
-
-              <div className="flex items-start gap-3">
-                <DollarSign className="h-5 w-5 text-blue-600 mt-0.5" />
-                <div>
-                  <p className="text-sm text-gray-600">Total</p>
-                  <p className="font-medium text-lg">
-                    ${booking.service.price.toString()}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {booking.status !== "CANCELLED" && (
-              <div className="pt-4 space-y-2">
-                <p className="text-sm text-gray-600">
-                  To manage this booking, please{" "}
-                  <a href="/signup" className="text-blue-600 hover:underline">
-                    create an account
-                  </a>{" "}
-                  or{" "}
-                  <a href="/login" className="text-blue-600 hover:underline">
-                    log in
-                  </a>
-                  .
-                </p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
+      {result && <BookingLookupResults result={result} />}
     </div>
   )
 }

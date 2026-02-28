@@ -3,12 +3,42 @@
 import { db } from "@/lib/db"
 import type { ActionResult } from "@/types"
 
+export type GuestBookingLookupResult = {
+  matchingBooking: {
+    id: string
+    guestName: string | null
+    guestEmail: string | null
+    guestPhone: string | null
+    startTime: Date
+    endTime: Date
+    status: string
+    notes: string | null
+    createdAt: Date
+    service: { name: string; durationMinutes: number; price: number }
+    staff: { id: string; user: { name: string } }
+  }
+  otherUpcomingBookings: Array<{
+    id: string
+    guestName: string | null
+    guestEmail: string | null
+    guestPhone: string | null
+    startTime: Date
+    endTime: Date
+    status: string
+    notes: string | null
+    createdAt: Date
+    service: { name: string; durationMinutes: number; price: number }
+    staff: { id: string; user: { name: string } }
+  }>
+}
+
 export async function lookupGuestBookingAction(
   email: string,
   bookingRef: string
-): Promise<ActionResult<any>> {
+): Promise<ActionResult<GuestBookingLookupResult>> {
   try {
     const normalizedRef = bookingRef.toUpperCase().replace(/[^A-Z0-9]/g, "")
+    const now = new Date()
 
     const bookings = await db.booking.findMany({
       where: {
@@ -53,7 +83,7 @@ export async function lookupGuestBookingAction(
     }))
 
     const matchingBooking = serializedBookings.find((b) =>
-      b.id.toUpperCase().includes(normalizedRef) || 
+      b.id.toUpperCase().includes(normalizedRef) ||
       b.id.slice(-8).toUpperCase() === normalizedRef
     )
 
@@ -64,7 +94,25 @@ export async function lookupGuestBookingAction(
       }
     }
 
-    return { success: true, data: matchingBooking }
+    const otherUpcomingBookings = serializedBookings
+      .filter(
+        (b) =>
+          b.id !== matchingBooking.id &&
+          b.status !== "CANCELLED" &&
+          new Date(b.startTime) >= now
+      )
+      .sort(
+        (a, b) =>
+          new Date(a.startTime).getTime() - new Date(b.startTime).getTime()
+      )
+
+    return {
+      success: true,
+      data: {
+        matchingBooking,
+        otherUpcomingBookings,
+      },
+    }
   } catch (error) {
     console.error("[lookupGuestBookingAction]", error)
     return { success: false, error: "Failed to lookup booking" }

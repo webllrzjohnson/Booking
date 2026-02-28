@@ -12,7 +12,9 @@ const prisma = new PrismaClient({ adapter })
 async function main() {
   console.log("🌱 Seeding database...")
 
-  const services = await prisma.service.createMany({
+  const hashedPassword = await bcrypt.hash("password123", 10)
+
+  const servicesResult = await prisma.service.createMany({
     data: [
       {
         name: "Massage Therapy",
@@ -39,19 +41,19 @@ async function main() {
         price: 90,
       },
     ],
+    skipDuplicates: true,
   })
 
-  console.log(`✅ Created ${services.count} services`)
+  console.log(`✅ Services ready (${servicesResult.count} created)`)
 
   const [massage, physiotherapy, acupuncture] = await prisma.service.findMany({
     orderBy: { slug: "asc" },
   })
 
-  const hashedPassword = await bcrypt.hash("password123", 10)
-
   const staffUsers = await Promise.all([
-    prisma.user.create({
-      data: {
+    prisma.user.upsert({
+      where: { email: "sarah.chen@fitnesshealth.com" },
+      create: {
         email: "sarah.chen@fitnesshealth.com",
         name: "Sarah Chen",
         password: hashedPassword,
@@ -59,9 +61,11 @@ async function main() {
         role: "STAFF",
         emailVerifiedAt: new Date(),
       },
+      update: { password: hashedPassword },
     }),
-    prisma.user.create({
-      data: {
+    prisma.user.upsert({
+      where: { email: "michael.wong@fitnesshealth.com" },
+      create: {
         email: "michael.wong@fitnesshealth.com",
         name: "Michael Wong",
         password: hashedPassword,
@@ -69,9 +73,11 @@ async function main() {
         role: "STAFF",
         emailVerifiedAt: new Date(),
       },
+      update: { password: hashedPassword },
     }),
-    prisma.user.create({
-      data: {
+    prisma.user.upsert({
+      where: { email: "emily.johnson@fitnesshealth.com" },
+      create: {
         email: "emily.johnson@fitnesshealth.com",
         name: "Emily Johnson",
         password: hashedPassword,
@@ -79,36 +85,55 @@ async function main() {
         role: "STAFF",
         emailVerifiedAt: new Date(),
       },
+      update: { password: hashedPassword },
     }),
   ])
 
-  console.log(`✅ Created ${staffUsers.length} staff users`)
+  console.log(`✅ Staff users ready`)
 
   const staffProfiles = await Promise.all([
-    prisma.staff.create({
-      data: {
+    prisma.staff.upsert({
+      where: { userId: staffUsers[0].id },
+      create: {
         userId: staffUsers[0].id,
         bio: "Registered Massage Therapist with 8 years of experience specializing in deep tissue and sports massage. Certified in myofascial release techniques.",
         imageUrl: null,
       },
+      update: {
+        bio: "Registered Massage Therapist with 8 years of experience specializing in deep tissue and sports massage. Certified in myofascial release techniques.",
+      },
     }),
-    prisma.staff.create({
-      data: {
+    prisma.staff.upsert({
+      where: { userId: staffUsers[1].id },
+      create: {
         userId: staffUsers[1].id,
         bio: "Licensed Physiotherapist with expertise in sports injuries and post-surgical rehabilitation. Active member of the Canadian Physiotherapy Association.",
         imageUrl: null,
       },
+      update: {
+        bio: "Licensed Physiotherapist with expertise in sports injuries and post-surgical rehabilitation. Active member of the Canadian Physiotherapy Association.",
+      },
     }),
-    prisma.staff.create({
-      data: {
+    prisma.staff.upsert({
+      where: { userId: staffUsers[2].id },
+      create: {
         userId: staffUsers[2].id,
         bio: "Certified Acupuncturist and Traditional Chinese Medicine practitioner. Specializes in pain management and holistic wellness treatments.",
         imageUrl: null,
       },
+      update: {
+        bio: "Certified Acupuncturist and Traditional Chinese Medicine practitioner. Specializes in pain management and holistic wellness treatments.",
+      },
     }),
   ])
 
-  console.log(`✅ Created ${staffProfiles.length} staff profiles`)
+  console.log(`✅ Staff profiles ready`)
+
+  await prisma.staffService.deleteMany({
+    where: {
+      staffId: { in: staffProfiles.map((s) => s.id) },
+    },
+  })
 
   await prisma.staffService.createMany({
     data: [
@@ -119,29 +144,35 @@ async function main() {
     ],
   })
 
-  console.log(`✅ Created staff-service associations`)
+  console.log(`✅ Staff-service associations ready`)
 
-  const workingHoursData = []
   for (const staff of staffProfiles) {
     for (let day = 1; day <= 5; day++) {
-      workingHoursData.push({
-        staffId: staff.id,
-        dayOfWeek: day,
-        startTime: "09:00",
-        endTime: "17:00",
-        isAvailable: true,
+      await prisma.workingHours.upsert({
+        where: {
+          staffId_dayOfWeek: { staffId: staff.id, dayOfWeek: day },
+        },
+        create: {
+          staffId: staff.id,
+          dayOfWeek: day,
+          startTime: "09:00",
+          endTime: "17:00",
+          isAvailable: true,
+        },
+        update: {
+          startTime: "09:00",
+          endTime: "17:00",
+          isAvailable: true,
+        },
       })
     }
   }
 
-  await prisma.workingHours.createMany({
-    data: workingHoursData,
-  })
+  console.log(`✅ Working hours for all staff (Mon-Fri 9am-5pm)`)
 
-  console.log(`✅ Created working hours for all staff (Mon-Fri 9am-5pm)`)
-
-  const customerUser = await prisma.user.create({
-    data: {
+  await prisma.user.upsert({
+    where: { email: "demo@customer.com" },
+    create: {
       email: "demo@customer.com",
       name: "Demo Customer",
       password: hashedPassword,
@@ -149,12 +180,29 @@ async function main() {
       role: "CUSTOMER",
       emailVerifiedAt: new Date(),
     },
+    update: { password: hashedPassword },
   })
 
-  console.log(`✅ Created demo customer account`)
+  console.log(`✅ Demo customer account ready`)
+
+  await prisma.user.upsert({
+    where: { email: "admin@fitnesshealth.com" },
+    create: {
+      email: "admin@fitnesshealth.com",
+      name: "Admin User",
+      password: hashedPassword,
+      phone: "(555) 000-0000",
+      role: "ADMIN",
+      emailVerifiedAt: new Date(),
+    },
+    update: {},
+  })
+
+  console.log(`✅ Created/updated admin account`)
 
   console.log("\n🎉 Database seeded successfully!")
   console.log("\n📋 Login credentials for testing:")
+  console.log("   Admin: admin@fitnesshealth.com / password123")
   console.log("   Customer: demo@customer.com / password123")
   console.log("   Staff (Sarah): sarah.chen@fitnesshealth.com / password123")
   console.log("   Staff (Michael): michael.wong@fitnesshealth.com / password123")

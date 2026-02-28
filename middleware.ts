@@ -12,6 +12,16 @@ export default auth((req) => {
     )
   }
 
+  if (pathname.startsWith("/dashboard/admin")) {
+    const userRole = req.auth?.user?.role
+    if (userRole !== "ADMIN") {
+      if (userRole === "STAFF") {
+        return NextResponse.redirect(new URL("/dashboard/staff", req.url))
+      }
+      return NextResponse.redirect(new URL("/dashboard/bookings", req.url))
+    }
+  }
+
   if (pathname.startsWith("/dashboard/staff")) {
     const userRole = req.auth?.user?.role
     if (userRole !== "STAFF" && userRole !== "ADMIN") {

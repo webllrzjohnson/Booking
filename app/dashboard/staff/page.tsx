@@ -1,18 +1,23 @@
 import type { Metadata } from "next"
 import { redirect } from "next/navigation"
-import { startOfDay, endOfDay } from "date-fns"
 
 import { auth } from "@/lib/auth"
 import { getStaffByUserId } from "@/lib/queries/staff"
-import { getStaffBookings } from "@/lib/queries/booking"
+import { getStaffUpcomingBookingsPaginated } from "@/lib/queries/booking"
 import { StaffBookingsList } from "@/components/staff/staff-bookings-list"
+
+const DEFAULT_PAGE_SIZE = 10
 
 export const metadata: Metadata = {
   title: "Staff Dashboard - Fitness Health",
   description: "View your appointments and manage your schedule.",
 }
 
-export default async function StaffDashboardPage() {
+type PageProps = {
+  searchParams: Promise<{ page?: string }>
+}
+
+export default async function StaffDashboardPage({ searchParams }: PageProps) {
   const session = await auth()
 
   if (!session?.user?.id) {
@@ -38,12 +43,16 @@ export default async function StaffDashboardPage() {
     )
   }
 
-  const today = new Date()
-  const bookings = await getStaffBookings(
+  const { page: pageParam } = await searchParams
+  const page = Math.max(1, parseInt(pageParam ?? "1", 10) || 1)
+
+  const { bookings, total } = await getStaffUpcomingBookingsPaginated(
     staff.id,
-    startOfDay(today),
-    endOfDay(today)
+    page,
+    DEFAULT_PAGE_SIZE
   )
+
+  const totalPages = Math.ceil(total / DEFAULT_PAGE_SIZE)
 
   return (
     <div>
@@ -56,7 +65,13 @@ export default async function StaffDashboardPage() {
         </p>
       </div>
 
-      <StaffBookingsList bookings={bookings} />
+      <StaffBookingsList
+        bookings={bookings}
+        page={page}
+        pageSize={DEFAULT_PAGE_SIZE}
+        total={total}
+        totalPages={totalPages}
+      />
     </div>
   )
 }

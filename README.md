@@ -10,6 +10,7 @@ A professional booking and appointment management system for Fitness Health phys
 - **Account Management**: Create account to view and manage bookings
 - **Customer Dashboard**: View upcoming/past appointments, reschedule, or cancel
 - **Staff Dashboard**: View appointments and manage availability
+- **Admin Panel**: CRUD for services and staff (ADMIN role only)
 - **Add to Calendar**: Export bookings to iCal format
 
 ## Tech Stack
@@ -74,6 +75,10 @@ After seeding, you can log in with these credentials:
 - Email: `demo@customer.com`
 - Password: `password123`
 
+**Admin Account**:
+- Email: `admin@fitnesshealth.com`
+- Password: `password123`
+
 **Staff Accounts**:
 - Sarah Chen (Massage): `sarah.chen@fitnesshealth.com` / `password123`
 - Michael Wong (Physiotherapy): `michael.wong@fitnesshealth.com` / `password123`
@@ -103,12 +108,14 @@ After seeding, you can log in with these credentials:
 ```
 app/
   (auth)/          - Login and signup pages
-  (dashboard)/     - Protected customer and staff dashboards
+  (dashboard)/     - Protected customer, staff, and admin dashboards
+    admin/         - Admin panel (services, staff CRUD)
   book/            - Multi-step booking flow
   services/        - Services listing page
   api/auth/        - NextAuth API routes
 components/
   ui/              - Shadcn UI primitives
+  admin/           - Admin panel components (service-form, staff-form, etc.)
   auth/            - Authentication forms
   booking/         - Booking flow components
   bookings/        - Booking management components
@@ -160,10 +167,8 @@ Use the template for deploying similar projects to VPS/dedicated servers.
 
 ## Future Enhancements
 
-- Email notifications (confirmations, reminders)
 - Payment integration (Stripe)
 - SMS reminders
-- Full admin panel for service/staff management
 - Recurring appointments
 - Waitlist functionality
 - Multi-location support

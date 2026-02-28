@@ -33,7 +33,11 @@ export async function updateWorkingHoursAction(
       select: { userId: true },
     })
 
-    if (!staff || staff.userId !== session.user.id) {
+    if (!staff) {
+      return { success: false, error: "Staff not found" }
+    }
+
+    if (session.user.role !== "ADMIN" && staff.userId !== session.user.id) {
       return { success: false, error: "Unauthorized" }
     }
 
@@ -61,6 +65,7 @@ export async function updateWorkingHoursAction(
     }
 
     revalidatePath("/dashboard/staff/availability")
+    revalidatePath(`/dashboard/admin/staff/${staffId}`)
     return { success: true, data: undefined }
   } catch (error) {
     console.error("[updateWorkingHoursAction]", error)

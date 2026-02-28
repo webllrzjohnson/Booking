@@ -35,6 +35,12 @@ export default async function DashboardLayout({
       icon: "Settings",
       roles: ["STAFF", "ADMIN"],
     },
+    {
+      href: "/dashboard/admin",
+      label: "Admin Panel",
+      icon: "Shield",
+      roles: ["ADMIN"],
+    },
   ]
 
   const filteredNavItems = navItems.filter((item) =>

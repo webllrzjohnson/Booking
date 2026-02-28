@@ -137,6 +137,60 @@ export async function getGuestBooking(email: string, bookingId: string) {
   }
 }
 
+const STAFF_BOOKING_SELECT = {
+  id: true,
+  startTime: true,
+  endTime: true,
+  status: true,
+  notes: true,
+  guestName: true,
+  guestEmail: true,
+  guestPhone: true,
+  user: {
+    select: {
+      name: true,
+      email: true,
+      phone: true,
+    },
+  },
+  service: {
+    select: {
+      name: true,
+    },
+  },
+} as const
+
+export async function getStaffUpcomingBookingsPaginated(
+  staffId: string,
+  page: number,
+  pageSize: number
+): Promise<{ bookings: unknown[]; total: number }> {
+  const now = new Date()
+
+  const [bookings, total] = await Promise.all([
+    db.booking.findMany({
+      where: {
+        staffId,
+        startTime: { gte: now },
+        status: { in: ["PENDING", "CONFIRMED"] },
+      },
+      select: STAFF_BOOKING_SELECT,
+      orderBy: { startTime: "asc" },
+      skip: (page - 1) * pageSize,
+      take: pageSize,
+    }),
+    db.booking.count({
+      where: {
+        staffId,
+        startTime: { gte: now },
+        status: { in: ["PENDING", "CONFIRMED"] },
+      },
+    }),
+  ])
+
+  return { bookings, total }
+}
+
 export async function getStaffBookings(
   staffId: string,
   startDate: Date,

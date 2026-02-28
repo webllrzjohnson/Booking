@@ -24,6 +24,26 @@ export async function getServices() {
   }))
 }
 
+export async function getAllServices() {
+  const services = await db.service.findMany({
+    orderBy: { name: "asc" },
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+      description: true,
+      durationMinutes: true,
+      price: true,
+      isActive: true,
+    },
+  })
+
+  return services.map((service) => ({
+    ...service,
+    price: service.price.toNumber(),
+  }))
+}
+
 export async function getServiceById(id: string) {
   const service = await db.service.findUnique({
     where: { id },
@@ -34,6 +54,7 @@ export async function getServiceById(id: string) {
       description: true,
       durationMinutes: true,
       price: true,
+      isActive: true,
     },
   })
 
