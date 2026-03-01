@@ -13,6 +13,13 @@ model User {
   name                        String
   password                    String
   phone                       String?
+  streetAddress               String?
+  city                        String?
+  country                     String?
+  province                    String?
+  state                       String?
+  postalCode                  String?
+  zipCode                     String?
   role                        UserRole  @default(CUSTOMER)
   emailVerifiedAt              DateTime?
   emailVerificationToken      String?

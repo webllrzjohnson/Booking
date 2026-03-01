@@ -39,6 +39,13 @@ export async function signupAction(data: {
   email: string
   phone: string | null
   password: string
+  streetAddress?: string | null
+  city?: string | null
+  country?: string | null
+  province?: string | null
+  state?: string | null
+  postalCode?: string | null
+  zipCode?: string | null
 }): Promise<ActionResult<void>> {
   try {
     const existingUser = await db.user.findUnique({
@@ -60,6 +67,13 @@ export async function signupAction(data: {
         email: data.email,
         phone: data.phone,
         password: hashedPassword,
+        streetAddress: data.streetAddress ?? null,
+        city: data.city ?? null,
+        country: data.country ?? null,
+        province: data.province ?? null,
+        state: data.state ?? null,
+        postalCode: data.postalCode ?? null,
+        zipCode: data.zipCode ?? null,
         role: "CUSTOMER",
         emailVerificationToken: token,
         emailVerificationExpiresAt: expiresAt,

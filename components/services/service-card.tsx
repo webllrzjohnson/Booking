@@ -40,7 +40,7 @@ export function ServiceCard({
         <p className="text-gray-600 leading-relaxed">{description}</p>
       </CardContent>
       <CardFooter>
-        <Link href={`/book?service=${id}`} className="w-full">
+        <Link href={`/book/staff?service=${id}`} className="w-full">
           <Button className="w-full">Book This Service</Button>
         </Link>
       </CardFooter>
