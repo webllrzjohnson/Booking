@@ -1,5 +1,6 @@
 "use client"
 
+import { useRef, useState } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 
@@ -107,6 +108,7 @@ export function StaffFormCreate({ onSubmit, isSubmitting }: StaffFormCreateProps
 }
 
 type StaffFormEditProps = {
+  staffId: string
   defaultValues: {
     bio: string
     imageUrl: string | null
@@ -118,11 +120,14 @@ type StaffFormEditProps = {
 }
 
 export function StaffFormEdit({
+  staffId,
   defaultValues,
   services,
   onSubmit,
   isSubmitting,
 }: StaffFormEditProps) {
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [isUploading, setIsUploading] = useState(false)
   const form = useForm<UpdateStaffInput>({
     resolver: zodResolver(UpdateStaffSchema),
     defaultValues: {
@@ -131,6 +136,37 @@ export function StaffFormEdit({
       serviceIds: defaultValues.serviceIds,
     },
   })
+
+  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (!file.type.startsWith("image/")) {
+      form.setError("imageUrl", { message: "Please select an image file" })
+      return
+    }
+    setIsUploading(true)
+    form.clearErrors("imageUrl")
+    try {
+      const formData = new FormData()
+      formData.set("file", file)
+      formData.set("type", "staff")
+      formData.set("staffId", staffId)
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error ?? "Upload failed")
+      form.setValue("imageUrl", data.url)
+    } catch (err) {
+      form.setError("imageUrl", {
+        message: err instanceof Error ? err.message : "Upload failed",
+      })
+    } finally {
+      setIsUploading(false)
+      e.target.value = ""
+    }
+  }
 
   return (
     <Form {...form}>
@@ -153,10 +189,33 @@ export function StaffFormEdit({
           name="imageUrl"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Image URL</FormLabel>
-              <FormControl>
-                <Input {...field} placeholder="https://..." />
-              </FormControl>
+              <FormLabel>Profile Image</FormLabel>
+              <div className="flex gap-2">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  className="hidden"
+                  onChange={handleFileChange}
+                  aria-label="Upload staff image"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={isUploading}
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  {isUploading ? "Uploading..." : "Upload"}
+                </Button>
+                <FormControl>
+                  <Input
+                    {...field}
+                    placeholder="Or paste image URL"
+                    className="flex-1"
+                  />
+                </FormControl>
+              </div>
               <FormMessage />
             </FormItem>
           )}

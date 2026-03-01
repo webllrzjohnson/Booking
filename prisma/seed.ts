@@ -200,6 +200,21 @@ async function main() {
 
   console.log(`✅ Created/updated admin account`)
 
+  const existingSettings = await prisma.siteSettings.findFirst()
+  if (!existingSettings) {
+    await prisma.siteSettings.create({
+      data: {
+        siteName: "Fitness Health",
+        primaryColor: "#2563eb",
+        secondaryColor: "#0d9488",
+        contactPhone: "(555) 123-4567",
+        contactEmail: "info@fitnesshealth.com",
+        contactAddress: "123 Wellness Street, Health City",
+      },
+    })
+    console.log(`✅ Site settings ready`)
+  }
+
   console.log("\n🎉 Database seeded successfully!")
   console.log("\n📋 Login credentials for testing:")
   console.log("   Admin: admin@fitnesshealth.com / password123")

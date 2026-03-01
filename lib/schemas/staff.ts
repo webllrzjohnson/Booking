@@ -7,9 +7,15 @@ export const CreateStaffSchema = z.object({
   bio: z.string().min(1, "Bio is required"),
 })
 
+const imageUrlSchema = z.union([
+  z.string().url(),
+  z.string().regex(/^\/[^\s]*$/, { message: "Invalid url" }),
+  z.literal(""),
+])
+
 export const UpdateStaffSchema = z.object({
   bio: z.string().min(1).optional(),
-  imageUrl: z.union([z.string().url(), z.literal("")]).optional(),
+  imageUrl: imageUrlSchema.optional(),
   serviceIds: z.array(z.string().cuid()).default([]),
 })
 

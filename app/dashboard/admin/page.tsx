@@ -26,7 +26,19 @@ export default async function AdminPage() {
         </p>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-4 md:grid-cols-3">
+        <Link href="/dashboard/admin/settings">
+          <Card className="transition-colors hover:bg-gray-50 cursor-pointer">
+            <CardHeader>
+              <CardTitle>Site Settings</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-gray-500">
+                Colors, logo, hero image, contact info
+              </p>
+            </CardContent>
+          </Card>
+        </Link>
         <Link href="/dashboard/admin/services">
           <Card className="transition-colors hover:bg-gray-50 cursor-pointer">
             <CardHeader>

@@ -36,9 +36,21 @@ export default async function DashboardLayout({
       roles: ["STAFF", "ADMIN"],
     },
     {
+      href: "/dashboard/staff/profile",
+      label: "Profile & Settings",
+      icon: "UserCircle",
+      roles: ["STAFF", "ADMIN"],
+    },
+    {
       href: "/dashboard/admin",
       label: "Admin Panel",
       icon: "Shield",
+      roles: ["ADMIN"],
+    },
+    {
+      href: "/dashboard/admin/settings",
+      label: "Site Settings",
+      icon: "Palette",
       roles: ["ADMIN"],
     },
   ]

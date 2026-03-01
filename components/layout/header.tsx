@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import Image from "next/image"
 import { usePathname } from "next/navigation"
 import { Menu, X } from "lucide-react"
 import { useState } from "react"
@@ -14,9 +15,15 @@ interface HeaderProps {
     name?: string | null
     role: string
   } | null
+  siteName?: string
+  logoUrl?: string | null
 }
 
-export function Header({ user }: HeaderProps) {
+export function Header({
+  user,
+  siteName = "Fitness Health",
+  logoUrl,
+}: HeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const pathname = usePathname()
 
@@ -37,12 +44,20 @@ export function Header({ user }: HeaderProps) {
     <header className="sticky top-0 z-40 w-full border-b bg-white shadow-sm">
       <div className="container flex h-16 items-center justify-between">
         <Link href="/" className="flex items-center space-x-2">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-600 text-white font-bold text-lg">
-            FH
-          </div>
-          <span className="text-xl font-semibold text-gray-900">
-            Fitness Health
-          </span>
+          {logoUrl ? (
+            <Image
+              src={logoUrl}
+              alt={siteName}
+              width={40}
+              height={40}
+              className="h-10 w-10 rounded-full object-cover"
+            />
+          ) : (
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground font-bold text-lg">
+              {siteName.slice(0, 2).toUpperCase()}
+            </div>
+          )}
+          <span className="text-xl font-semibold text-gray-900">{siteName}</span>
         </Link>
 
         <nav className="hidden md:flex items-center space-x-6">
@@ -51,10 +66,8 @@ export function Header({ user }: HeaderProps) {
               key={link.href}
               href={link.href}
               className={cn(
-                "text-sm font-medium transition-colors hover:text-blue-600",
-                pathname === link.href
-                  ? "text-blue-600"
-                  : "text-gray-600"
+                "text-sm font-medium transition-colors hover:text-primary",
+                pathname === link.href ? "text-primary" : "text-gray-600"
               )}
             >
               {link.label}
@@ -118,9 +131,7 @@ export function Header({ user }: HeaderProps) {
                 href={link.href}
                 className={cn(
                   "text-sm font-medium transition-colors",
-                  pathname === link.href
-                    ? "text-blue-600"
-                    : "text-gray-600"
+                  pathname === link.href ? "text-primary" : "text-gray-600"
                 )}
                 onClick={() => setMobileMenuOpen(false)}
               >

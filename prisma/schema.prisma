@@ -116,6 +116,21 @@ model Booking {
   @@map("bookings")
 }
 
+model SiteSettings {
+  id             String   @id @default(cuid())
+  siteName       String   @default("Fitness Health")
+  logoUrl        String?
+  heroImageUrl  String?
+  primaryColor   String   @default("#2563eb")
+  secondaryColor String   @default("#0d9488")
+  contactPhone   String?
+  contactEmail   String?
+  contactAddress String?
+  updatedAt      DateTime @updatedAt
+
+  @@map("site_settings")
+}
+
 enum UserRole {
   CUSTOMER
   STAFF

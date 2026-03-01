@@ -27,6 +27,7 @@ export function StaffEditFormWrapper({
 
   return (
     <StaffFormEdit
+      staffId={staffId}
       defaultValues={defaultValues}
       services={services}
       onSubmit={async (data: UpdateStaffInput) => {

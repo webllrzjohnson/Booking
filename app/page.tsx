@@ -1,19 +1,38 @@
 import Link from "next/link"
 import { ArrowRight, Users, Award, Heart } from "lucide-react"
 
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { getSiteSettings } from "@/lib/queries/site-settings"
+import { getAllStaff } from "@/lib/queries/staff"
 
-export default function HomePage() {
+export default async function HomePage() {
+  const [settings, staff] = await Promise.all([
+    getSiteSettings(),
+    getAllStaff(),
+  ])
+
   return (
     <div className="flex flex-col">
-      <section className="relative bg-gradient-to-br from-blue-600 to-blue-700 text-white py-20 md:py-32">
+      <section
+        className="relative text-white py-20 md:py-32 bg-primary"
+        style={
+          settings.heroImageUrl
+            ? {
+                backgroundImage: `linear-gradient(to bottom right, hsl(var(--primary) / 0.9), hsl(var(--primary) / 0.7)), url(${settings.heroImageUrl})`,
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+              }
+            : undefined
+        }
+      >
         <div className="container">
           <div className="max-w-3xl">
             <h1 className="text-4xl md:text-6xl font-bold mb-6 leading-tight">
               Your Path to Better Health
             </h1>
-            <p className="text-lg md:text-xl text-blue-50 mb-8 leading-relaxed">
+            <p className="text-lg md:text-xl text-white/90 mb-8 leading-relaxed">
               Experience professional physiotherapy, massage therapy, and
               acupuncture treatments in a calm, welcoming environment. Our
               experienced practitioners are here to help you heal and thrive.
@@ -21,7 +40,7 @@ export default function HomePage() {
             <Link href="/book">
               <Button
                 size="lg"
-                className="bg-teal-500 hover:bg-teal-600 text-white shadow-lg"
+                className="bg-secondary hover:bg-secondary/90 text-secondary-foreground shadow-lg"
               >
                 Book Your Appointment
                 <ArrowRight className="ml-2 h-5 w-5" />
@@ -44,10 +63,10 @@ export default function HomePage() {
           </div>
 
           <div className="grid md:grid-cols-3 gap-8">
-            <Card className="border-2 hover:border-blue-200 transition-colors">
+            <Card className="border-2 hover:border-primary/30 transition-colors">
               <CardHeader>
-                <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center mb-4">
-                  <Heart className="h-6 w-6 text-blue-600" />
+                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+                  <Heart className="h-6 w-6 text-primary" />
                 </div>
                 <CardTitle className="text-xl">Massage Therapy</CardTitle>
                 <CardDescription className="text-base">
@@ -67,10 +86,10 @@ export default function HomePage() {
               </CardContent>
             </Card>
 
-            <Card className="border-2 hover:border-blue-200 transition-colors">
+            <Card className="border-2 hover:border-primary/30 transition-colors">
               <CardHeader>
-                <div className="w-12 h-12 rounded-full bg-teal-100 flex items-center justify-center mb-4">
-                  <Award className="h-6 w-6 text-teal-600" />
+                <div className="w-12 h-12 rounded-full bg-secondary/10 flex items-center justify-center mb-4">
+                  <Award className="h-6 w-6 text-secondary" />
                 </div>
                 <CardTitle className="text-xl">Physiotherapy</CardTitle>
                 <CardDescription className="text-base">
@@ -90,10 +109,10 @@ export default function HomePage() {
               </CardContent>
             </Card>
 
-            <Card className="border-2 hover:border-blue-200 transition-colors">
+            <Card className="border-2 hover:border-primary/30 transition-colors">
               <CardHeader>
-                <div className="w-12 h-12 rounded-full bg-teal-100 flex items-center justify-center mb-4">
-                  <Users className="h-6 w-6 text-teal-600" />
+                <div className="w-12 h-12 rounded-full bg-secondary/10 flex items-center justify-center mb-4">
+                  <Users className="h-6 w-6 text-secondary" />
                 </div>
                 <CardTitle className="text-xl">Acupuncture</CardTitle>
                 <CardDescription className="text-base">
@@ -116,7 +135,63 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="py-16 md:py-24 bg-gray-50">
+      {staff.length > 0 && (
+        <section className="py-16 md:py-24 bg-gray-50">
+          <div className="container">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+                Practitioners
+              </h2>
+              <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+                Meet our experienced team dedicated to your wellness
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {staff.map((practitioner) => (
+                <Card
+                  key={practitioner.id}
+                  className="border-2 hover:border-primary/30 transition-colors overflow-hidden"
+                >
+                <CardHeader className="flex flex-row items-start gap-4">
+                  <Avatar className="h-16 w-16 shrink-0">
+                    {practitioner.imageUrl ? (
+                      <AvatarImage
+                        src={practitioner.imageUrl}
+                        alt={practitioner.name}
+                      />
+                    ) : null}
+                    <AvatarFallback className="bg-primary/10 text-primary text-lg font-semibold">
+                      {practitioner.name
+                        .split(" ")
+                        .map((n) => n[0])
+                        .join("")
+                        .slice(0, 2)
+                        .toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <CardTitle className="text-xl">{practitioner.name}</CardTitle>
+                    <CardDescription className="text-base">
+                      {practitioner.services.length > 0
+                        ? practitioner.services.join(", ")
+                        : "General practitioner"}
+                    </CardDescription>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-gray-600 text-sm line-clamp-4">
+                    {practitioner.bio}
+                  </p>
+                </CardContent>
+              </Card>
+            ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      <section className="py-16 md:py-24 bg-white">
         <div className="container">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
@@ -126,8 +201,8 @@ export default function HomePage() {
 
           <div className="grid md:grid-cols-3 gap-8">
             <div className="text-center">
-              <div className="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center mx-auto mb-4">
-                <Users className="h-8 w-8 text-blue-600" />
+              <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                <Users className="h-8 w-8 text-primary" />
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-2">
                 Experienced Staff
@@ -139,8 +214,8 @@ export default function HomePage() {
             </div>
 
             <div className="text-center">
-              <div className="w-16 h-16 rounded-full bg-teal-100 flex items-center justify-center mx-auto mb-4">
-                <Award className="h-8 w-8 text-teal-600" />
+              <div className="w-16 h-16 rounded-full bg-secondary/10 flex items-center justify-center mx-auto mb-4">
+                <Award className="h-8 w-8 text-secondary" />
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-2">
                 Modern Facilities
@@ -152,8 +227,8 @@ export default function HomePage() {
             </div>
 
             <div className="text-center">
-              <div className="w-16 h-16 rounded-full bg-teal-100 flex items-center justify-center mx-auto mb-4">
-                <Heart className="h-8 w-8 text-teal-600" />
+              <div className="w-16 h-16 rounded-full bg-secondary/10 flex items-center justify-center mx-auto mb-4">
+                <Heart className="h-8 w-8 text-secondary" />
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-2">
                 Personalized Care
@@ -167,19 +242,19 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="py-16 md:py-24 bg-blue-600 text-white">
+      <section className="py-16 md:py-24 bg-primary text-primary-foreground">
         <div className="container text-center">
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
             Ready to Start Your Healing Journey?
           </h2>
-          <p className="text-lg text-blue-50 mb-8 max-w-2xl mx-auto">
+          <p className="text-lg text-primary-foreground/90 mb-8 max-w-2xl mx-auto">
             Book your appointment today and take the first step toward better
             health and wellness.
           </p>
           <Link href="/book">
             <Button
               size="lg"
-              className="bg-white text-blue-600 hover:bg-gray-100"
+              className="bg-white text-primary hover:bg-gray-100"
             >
               Book Now
               <ArrowRight className="ml-2 h-5 w-5" />

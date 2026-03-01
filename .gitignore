@@ -36,5 +36,8 @@ next-env.d.ts
 # prisma
 /generated
 
+# uploads
+/public/uploads
+
 #Deployment Guide
 DEPLOYMENT-GUIDE.md

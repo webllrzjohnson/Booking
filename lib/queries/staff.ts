@@ -64,6 +64,7 @@ export async function getAllStaff() {
     select: {
       id: true,
       bio: true,
+      imageUrl: true,
       user: {
         select: {
           name: true,
@@ -85,6 +86,7 @@ export async function getAllStaff() {
     name: s.user.name,
     email: s.user.email,
     bio: s.bio,
+    imageUrl: s.imageUrl,
     services: s.staffServices.map((ss) => ss.service.name),
   }))
 }

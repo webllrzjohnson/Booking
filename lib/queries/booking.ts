@@ -160,11 +160,24 @@ const STAFF_BOOKING_SELECT = {
   },
 } as const
 
+export type StaffBookingItem = {
+  id: string
+  startTime: Date
+  endTime: Date
+  status: string
+  notes: string | null
+  guestName: string | null
+  guestEmail: string | null
+  guestPhone: string | null
+  user: { name: string; email: string | null; phone: string | null } | null
+  service: { name: string }
+}
+
 export async function getStaffUpcomingBookingsPaginated(
   staffId: string,
   page: number,
   pageSize: number
-): Promise<{ bookings: unknown[]; total: number }> {
+): Promise<{ bookings: StaffBookingItem[]; total: number }> {
   const now = new Date()
 
   const [bookings, total] = await Promise.all([
