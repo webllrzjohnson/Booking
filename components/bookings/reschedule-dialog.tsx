@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { format, addDays } from "date-fns"
+import { format, addDays, parse } from "date-fns"
 import { toZonedTime } from "date-fns-tz"
 
 const BUSINESS_TIMEZONE = "America/Toronto"
@@ -54,24 +54,50 @@ export function RescheduleDialog({ booking }: RescheduleDialogProps) {
   const [error, setError] = useState<string | null>(null)
   const [availableDates, setAvailableDates] = useState<Set<string>>(new Set())
   const [isLoadingDates, setIsLoadingDates] = useState(true)
+  const [calendarMonth, setCalendarMonth] = useState<Date>(() => new Date())
 
   useEffect(() => {
     async function loadAvailableDates() {
       if (!open) return
 
       setIsLoadingDates(true)
+      setSelectedDate(undefined)
+      setSelectedSlot(undefined)
+      setAvailableSlots([])
+
       const startDate = new Date()
       const endDate = addDays(new Date(), 60)
-      
+
       const result = await getAvailableDatesAction(
         booking.staffId,
         booking.serviceId,
         startDate,
         endDate
       )
-      
+
       if (result.success) {
-        setAvailableDates(new Set(result.data))
+        const dates = result.data
+        setAvailableDates(new Set(dates))
+
+        if (dates.length > 0) {
+          const firstDateStr = dates[0]
+          const firstDate = parse(firstDateStr, "yyyy-MM-dd", new Date())
+          setSelectedDate(firstDate)
+          setCalendarMonth(firstDate)
+
+          setIsLoadingSlots(true)
+          const slotsResult = await getAvailableSlotsAction(
+            booking.staffId,
+            booking.serviceId,
+            firstDate
+          )
+          setIsLoadingSlots(false)
+          if (slotsResult.success) {
+            setAvailableSlots(slotsResult.data)
+          }
+        } else {
+          setCalendarMonth(startDate)
+        }
       }
       setIsLoadingDates(false)
     }
@@ -138,16 +164,29 @@ export function RescheduleDialog({ booking }: RescheduleDialogProps) {
             <h3 className="font-medium mb-3">Select New Date</h3>
             <Calendar
               mode="single"
+              month={calendarMonth}
+              onMonthChange={setCalendarMonth}
               selected={selectedDate}
               onSelect={handleDateSelect}
               disabled={(date) => {
                 const today = new Date()
                 today.setHours(0, 0, 0, 0)
                 const dateStr = format(date, "yyyy-MM-dd")
-                const hasNoAvailability = !isLoadingDates && !availableDates.has(dateStr)
+                const hasNoAvailability =
+                  !isLoadingDates && !availableDates.has(dateStr)
                 return (
-                  date < today || date.getDay() === 0 || date.getDay() === 6 || hasNoAvailability
+                  date < today ||
+                  date.getDay() === 0 ||
+                  date.getDay() === 6 ||
+                  hasNoAvailability
                 )
+              }}
+              modifiers={{
+                available: (date) =>
+                  !isLoadingDates && availableDates.has(format(date, "yyyy-MM-dd")),
+              }}
+              modifiersClassNames={{
+                available: "bg-primary/10 font-medium ring-1 ring-primary/30",
               }}
               className="rounded-md border"
             />

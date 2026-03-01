@@ -60,15 +60,15 @@ export function BookingCard({ booking, showActions = false }: BookingCardProps) 
           <div className="flex items-center gap-3 text-sm">
             <Calendar className="h-4 w-4 text-gray-600" />
             <span className="font-medium">
-              {format(toZonedTime(booking.startTime, BUSINESS_TIMEZONE), "EEEE, MMMM d, yyyy")}
+              {format(toZonedTime(new Date(booking.startTime), BUSINESS_TIMEZONE), "EEEE, MMMM d, yyyy")}
             </span>
           </div>
 
           <div className="flex items-center gap-3 text-sm">
             <Clock className="h-4 w-4 text-gray-600" />
             <span>
-              {format(toZonedTime(booking.startTime, BUSINESS_TIMEZONE), "h:mm a")} -{" "}
-              {format(toZonedTime(booking.endTime, BUSINESS_TIMEZONE), "h:mm a")}
+              {format(toZonedTime(new Date(booking.startTime), BUSINESS_TIMEZONE), "h:mm a")} -{" "}
+              {format(toZonedTime(new Date(booking.endTime), BUSINESS_TIMEZONE), "h:mm a")}
             </span>
           </div>
 
